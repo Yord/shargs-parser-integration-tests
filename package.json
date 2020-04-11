@@ -1,0 +1,39 @@
+{
+  "name": "shargs-parser-integration-tests",
+  "version": "0.1.0",
+  "description": "Automatic usage documentation generation for shargs",
+  "keywords": [
+    "shargs",
+    "command-line",
+    "parser"
+  ],
+  "homepage": "https://github.com/Yord/shargs-parser-integration-tests",
+  "bugs": {
+    "url": "https://github.com/Yord/shargs/issues"
+  },
+  "license": "MIT",
+  "author": "Philipp Wille <philipp.y.wille@gmail.com> (https://github.com/Yord)",
+  "contributors": [
+    "Philipp Wille <philipp.y.wille@gmail.com> (https://github.com/Yord)"
+  ],
+  "main": "./src/index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Yord/shargs-parser-integration-tests.git"
+  },
+  "scripts": {
+    "test": "jest --ci --coverage --collectCoverageFrom 'src/**/*.js' --logHeapUsage --passWithNoTests"
+  },
+  "engines": {
+    "node": ">=8.3.0"
+  },
+  "private": true,
+  "devDependencies": {
+    "fast-check": "1.23.0",
+    "jest": "25.1.0"
+  },
+  "dependencies": {
+    "shargs": "^0.17.1",
+    "shargs-parser": "^0.2.0"
+  }
+}
