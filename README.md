@@ -1,0 +1,1 @@
+shargs-parser-integration-tests runs several integration tests for shargs-parser and shargs 🦈.
