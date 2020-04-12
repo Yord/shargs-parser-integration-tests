@@ -1193,14 +1193,28 @@ test('parser with custom stages works as expected', () => {
   }
 
   function dateToMillis ({errs = [], opts = []} = {}) {
-    const isDate = ({types}) => Array.isArray(types) && types.length === 1 && types[0] === 'date'
+    const isDate = ({types}) => (
+      Array.isArray(types) &&
+      types.length === 1 &&
+      types[0] === 'date'
+    )
+  
+    const toMillis = string => new Date(string).getTime()
+  
     const dateToMillis = opt => ({
       opts: [{
         ...opt,
-        defaultValues: opt.defaultValues.map(string => new Date(string).getTime())
+        ...(Array.isArray(opt.defaultValues)
+            ? {defaultValues: opt.defaultValues.map(toMillis)}
+            : {}
+        ),
+        ...(Array.isArray(opt.values)
+            ? {values: opt.values.map(toMillis)}
+            : {}
+        ),
       }]
     })
-
+  
     return traverseOpts(isDate)(dateToMillis)({errs, opts})
   }
 
