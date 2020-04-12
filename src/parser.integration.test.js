@@ -32,6 +32,8 @@ const {
   verifyValuesArity
 } = require('shargs-parser')
 
+const {bool, command, complement, flag, string} = require('shargs-opts')
+
 const {
   argumentIsNotABool,
   commandRequired,
@@ -46,8 +48,6 @@ const {
   unexpectedArgument,
   valueRestrictionsViolated
 } = require('./errors')
-
-//const complement = require('./options/decorators/complement')
 
 const noCommands = opts => opts.filter(({types}) => types !== null)
 
@@ -65,29 +65,23 @@ const filterErrs = keys => errs => errs.map(
 )
 
 const opts = [
-  {key: 'help', types: [], args: ['--help']},
-  {key: 'verbose', types: [], args: ['-v', '--verbose']},
-  {key: 'popcorn', types: [], args: ['-l', '--low-fat'], reverse: true},
-  {key: 'fantasy', types: ['bool'], args: ['-E', '--no-hobbits'], reverse: true, implies: ['genre'], contradicts: ['popcorn']},
-  {key: 'genre', types: ['string'], args: ['-g', '--genre'], required: true},
-  {key: 'smile', types: ['bool'], args: ['--smile'], defaultValues: ['yes']},
-  {
-    key: 'rate',
-    types: null,
-    args: ['rate'],
+  flag('help', ['--help']),
+  flag('verbose', ['-v', '--verbose']),
+  flag('popcorn', ['-l', '--low-fat'], {reverse: true}),
+  bool('fantasy', ['-E', '--no-hobbits'], {reverse: true, implies: ['genre'], contradicts: ['popcorn']}),
+  string('genre', ['-g', '--genre'], {required: true}),
+  bool('smile', ['--smile'], {defaultValues: ['yes']}),
+  command('rate', ['rate'], {
     opts: [
       {key: 'stars', types: ['number'], args: ['-s', '--stars'], only: ['1', '2', '3', '4', '5']}
     ]
-  },
-  {
-    key: 'query',
-    types: ['string'],
-    args: ['-q', '--query'],
+  }),
+  string('query', ['-q', '--query'], {
     rules: title => opts => (
       !title.values[0].includes('Supersize Me') ||
       opts.some(_ => _.key === 'popcorn' && _.values.count === 0)
     )
-  }
+  })
 ]
 
 const argv = [
@@ -1290,8 +1284,6 @@ test('parser works with complex stages setup', () => {
 // flagsAsBools
 // flagsAsNumbers
 
-/*
-
 test('parser works with complement', () => {
   const tired     = {key: 'tired', types: ['bool'], args: ['-t', '--tired'], defaultValues: ['true']}
   const notTired  = complement('--not-')(tired)
@@ -1327,102 +1319,3 @@ test('parser works with complement', () => {
   expect(args).toStrictEqual(expArgs)
   expect(errs).toStrictEqual(expErrs)
 })
-
-test('parser uses the first option if options are defined several times 1/3', () => {
-  const tired = {key: 'tired', types: ['bool'], args: ['-t', '--tired']}
-  const help  = {key: 'help', types: null, args: ['help']}
-
-  const opts = [
-    tired,
-    help
-  ]
-
-  const stages = {
-    opts: [reverseBools]
-  }
-
-  const parse = parser(stages)(opts)
-
-  const argv = ['--tired', 'true', '--tired', 'false', 'help']
-
-  const {errs, args} = parse(argv)
-
-  const expErrs = []
-
-  const expArgs = {
-    _: [],
-    tired: 'true',
-    help: {
-      _: []
-    }
-  }
-
-  expect(args).toStrictEqual(expArgs)
-  expect(errs).toStrictEqual(expErrs)
-})
-
-test('parser uses the first option if options are defined several times 2/3', () => {
-  const tired = {key: 'tired', types: ['bool'], args: ['-t', '--tired']}
-  const help  = {key: 'help', types: null, args: ['help']}
-
-  const opts = [
-    tired,
-    help
-  ]
-
-  const stages = {
-    opts: [reverseBools]
-  }
-
-  const parse = parser(stages)(opts)
-
-  const argv = ['--tired', 'true', 'help', '--tired', 'false']
-
-  const {errs, args} = parse(argv)
-
-  const expErrs = []
-
-  const expArgs = {
-    _: ['--tired', 'false'],
-    help: {
-      _: ['--tired', 'false']
-    },
-    tired: 'true'
-  }
-
-  expect(args).toStrictEqual(expArgs)
-  expect(errs).toStrictEqual(expErrs)
-})
-
-test('parser uses the first option if options are defined several times 3/3', () => {
-  const tired = {key: 'tired', types: ['bool'], args: ['-t', '--tired']}
-  const help  = {key: 'help', types: null, args: ['help']}
-
-  const opts = [
-    tired,
-    help
-  ]
-
-  const stages = {
-    opts: [reverseBools]
-  }
-
-  const parse = parser(stages)(opts)
-
-  const argv = ['help', '--tired', 'true', '--tired', 'false']
-
-  const {errs, args} = parse(argv)
-
-  const expErrs = []
-
-  const expArgs = {
-    _: [],
-    help: {
-      _: ['--tired', 'true', '--tired', 'false']
-    },
-    tired: 'true'
-  }
-
-  expect(args).toStrictEqual(expArgs)
-  expect(errs).toStrictEqual(expErrs)
-})*/
