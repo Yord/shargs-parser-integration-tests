@@ -32,7 +32,7 @@ const {
   verifyValuesArity
 } = require('shargs-parser')
 
-const {bool, command, complement, flag, string} = require('shargs-opts')
+const {array, bool, command, complement, flag, string} = require('shargs-opts')
 
 const {
   argumentIsNotABool,
@@ -64,6 +64,8 @@ const filterErrs = keys => errs => errs.map(
   )
 )
 
+const date = array(['date'])
+
 const opts = [
   flag('help', ['--help']),
   flag('verbose', ['-v', '--verbose']),
@@ -71,6 +73,7 @@ const opts = [
   bool('fantasy', ['-E', '--no-hobbits'], {reverse: true, implies: ['genre'], contradicts: ['popcorn']}),
   string('genre', ['-g', '--genre'], {required: true}),
   bool('smile', ['--smile'], {defaultValues: ['yes']}),
+  date('date', ['--date'], {defaultValues: ['1977/05/25']}),
   command('rate', ['rate'], {
     opts: [
       {key: 'stars', types: ['number'], args: ['-s', '--stars'], only: ['1', '2', '3', '4', '5']}
@@ -106,6 +109,7 @@ test('parser without stages works as expected', () => {
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
+    date: '1977/05/25',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -134,6 +138,7 @@ test('parser only equalsSignAsSpace works as expected', () => {
     _: ['--colors', '-vv'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
+    date: '1977/05/25',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -162,6 +167,7 @@ test('parser with shortOptsNoSpace works as expected', () => {
     _: ['--colors', 'v', '--smile=no'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
+    date: '1977/05/25',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -191,6 +197,7 @@ test('parser with only splitShortOptions works as expected', () => {
     _: ['--colors', '--smile=no'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
+    date: '1977/05/25',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -226,6 +233,7 @@ test('parser with only traverseArgv works as expected', () => {
     _: ['--colors', '--smile=no'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
+    date: '1977/05/25',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -259,6 +267,7 @@ test('parser with only verifyArgv works as expected', () => {
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
+    date: '1977/05/25',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -289,6 +298,7 @@ test('parser with only arrayOnRepeat works as expected', () => {
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
+    date: '1977/05/25',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -316,6 +326,7 @@ test('parser with only bestGuessOpts works as expected', () => {
   const expArgs = {
     _: ['-vv'],
     fantasy: 'true',
+    date: '1977/05/25',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: [],
@@ -347,6 +358,7 @@ test('parser with only broadenBools works as expected', () => {
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
+    date: '1977/05/25',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -375,6 +387,7 @@ test('parser with only cast works as expected', () => {
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: true,
     help: {type: 'flag', count: 1},
+    date: '1977/05/25',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -406,6 +419,7 @@ test('parser with only contradictOpts works as expected', () => {
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
+    date: '1977/05/25',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -438,6 +452,7 @@ test('parser with only demandACommand works as expected if no command is present
     _: ['--colors', '-vv', '--smile=no', 'rate', '--stars', '8'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
+    date: '1977/05/25',
     popcorn: {type: 'flag', count: 1},
     query: 'Supersize Me',
     smile: 'yes'
@@ -466,6 +481,7 @@ test('parser with only demandACommand works as expected if a command is present'
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
+    date: '1977/05/25',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -496,6 +512,7 @@ test('parser with only implyOpts works as expected', () => {
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
+    date: '1977/05/25',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -528,6 +545,7 @@ test('parser with only requireOptions works as expected', () => {
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
+    date: '1977/05/25',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -558,6 +576,7 @@ test('parser with only restrictToOnly works as expected', () => {
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
+    date: '1977/05/25',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help']
@@ -587,6 +606,7 @@ test('parser with only reverseBools works as expected', () => {
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'false',
     help: {type: 'flag', count: 1},
+    date: '1977/05/25',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -615,6 +635,7 @@ test('parser with only reverseFlags works as expected', () => {
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
+    date: '1977/05/25',
     popcorn: {type: 'flag', count: -1},
     rate: {
       _: ['--help'],
@@ -645,6 +666,7 @@ test('parser with only suggestOptions works as expected', () => {
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
+    date: '1977/05/25',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -689,6 +711,7 @@ test('parser with only traverseOpts works as expected', () => {
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'true',
     help: {type: 'flag', count: -1},
+    date: '1977/05/25',
     popcorn: {type: 'flag', count: -1},
     rate: {
       _: ['--help'],
@@ -724,6 +747,7 @@ test('parser with only verifyOpts works as expected', () => {
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
+    date: '1977/05/25',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -756,6 +780,7 @@ test('parser with only verifyRules works as expected', () => {
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
+    date: '1977/05/25',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -788,6 +813,7 @@ test('parser with only verifyValuesArity works as expected', () => {
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
+    date: '1977/05/25',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -816,6 +842,7 @@ test('parser with only bestGuessArgs works as expected', () => {
     _: ['-vv'],
     colors: {type: 'flag', count: 1},
     fantasy: 'true',
+    date: '1977/05/25',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: [],
@@ -846,6 +873,7 @@ test('parser with only bestGuessCast works as expected', () => {
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: true,
     help: {type: 'flag', count: 1},
+    date: '1977/05/25',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -873,6 +901,7 @@ test('parser with only clearRest works as expected', () => {
   const expArgs = {
     _: [],
     fantasy: 'true',
+    date: '1977/05/25',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: [],
@@ -903,6 +932,7 @@ test('parser with only failRest works as expected', () => {
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
+    date: '1977/05/25',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -936,6 +966,7 @@ test('parser with only flagsAsBools works as expected', () => {
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'true',
     help: true,
+    date: '1977/05/25',
     popcorn: true,
     rate: {
       _: ['--help'],
@@ -964,6 +995,7 @@ test('parser with only flagsAsNumbers works as expected', () => {
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'true',
     help: 1,
+    date: '1977/05/25',
     popcorn: 1,
     rate: {
       _: ['--help'],
@@ -992,6 +1024,7 @@ test('parser with only mergeArgs works as expected', () => {
     _: ['--colors', '-vv', '--smile=no', '--help'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
+    date: '1977/05/25',
     popcorn: {type: 'flag', count: 1},
     stars: '8',
     query: 'Supersize Me',
@@ -1024,6 +1057,7 @@ test('parser with only traverseArgs works as expected', () => {
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
+    date: '1977/05/25',
     popcorn: true,
     rate: {
       _: ['--help'],
@@ -1056,6 +1090,7 @@ test('parser with only verifyArgs works as expected', () => {
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
+    date: '1977/05/25',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -1096,6 +1131,7 @@ test('parser with custom parser functions for the rate command works as expected
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
+    date: '1977/05/25',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -1156,12 +1192,25 @@ test('parser with custom stages works as expected', () => {
     return {errs: errs.concat(errs2), args: args2}
   }
 
+  function dateToMillis ({errs = [], opts = []} = {}) {
+    const isDate = ({types}) => Array.isArray(types) && types.length === 1 && types[0] === 'date'
+    const dateToMillis = opt => ({
+      opts: [{
+        ...opt,
+        defaultValues: opt.defaultValues.map(string => new Date(string).getTime())
+      }]
+    })
+
+    return traverseOpts(isDate)(dateToMillis)({errs, opts})
+  }
+
   const checks = {
     opts: [demandACommand]
   }
 
   const stages = {
     argv: [splitShortOptions],
+    opts: [dateToMillis],
     args: [flagsAsBools]
   }
 
@@ -1171,6 +1220,7 @@ test('parser with custom stages works as expected', () => {
     _: ['--colors', '--smile=no'],
     fantasy: 'true',
     help: true,
+    date: 233362800000,
     popcorn: true,
     rate: {
       _: ['--help'],
@@ -1249,6 +1299,7 @@ test('parser works with complex stages setup', () => {
     _: ['--colors', '--help'],
     fantasy: false,
     help: true,
+    date: '1977/05/25',
     popcorn: false,
     query: ['Supersize Me', 'The Hobbit'],
     smile: false,
