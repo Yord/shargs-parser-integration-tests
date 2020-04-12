@@ -1192,30 +1192,30 @@ test('parser with custom stages works as expected', () => {
     return {errs: errs.concat(errs2), args: args2}
   }
 
-  function dateToMillis ({errs = [], opts = []} = {}) {
+  function dateToYear ({errs = [], opts = []} = {}) {
     const isDate = ({types}) => (
       Array.isArray(types) &&
       types.length === 1 &&
       types[0] === 'date'
     )
   
-    const toMillis = string => new Date(string).getTime()
+    const toYear = string => typeof string === 'string' ? new Date(string).getFullYear() : string
   
-    const dateToMillis = opt => ({
+    const dateToYear = opt => ({
       opts: [{
         ...opt,
         ...(Array.isArray(opt.defaultValues)
-            ? {defaultValues: opt.defaultValues.map(toMillis)}
+            ? {defaultValues: opt.defaultValues.map(toYear)}
             : {}
         ),
         ...(Array.isArray(opt.values)
-            ? {values: opt.values.map(toMillis)}
+            ? {values: opt.values.map(toYear)}
             : {}
-        ),
+        )
       }]
     })
   
-    return traverseOpts(isDate)(dateToMillis)({errs, opts})
+    return traverseOpts(isDate)(dateToYear)({errs, opts})
   }
 
   const checks = {
@@ -1224,7 +1224,7 @@ test('parser with custom stages works as expected', () => {
 
   const stages = {
     argv: [splitShortOptions],
-    opts: [dateToMillis],
+    opts: [dateToYear],
     args: [flagsAsBools]
   }
 
@@ -1234,7 +1234,7 @@ test('parser with custom stages works as expected', () => {
     _: ['--colors', '--smile=no'],
     fantasy: 'true',
     help: true,
-    date: 233362800000,
+    date: 1977,
     popcorn: true,
     rate: {
       _: ['--help'],
