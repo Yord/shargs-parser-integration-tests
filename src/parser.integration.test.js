@@ -1471,3 +1471,57 @@ test('FAQ 0..1 example works', () => {
     fun: 'unknown'
   })
 })
+
+test('FAQ nest example works', () => {
+  function traverseKeys (p) {
+    return f => args => Object.keys(args).reduce(
+      (obj, key) => {
+        const val = args[key]
+        if (!Array.isArray(val) && typeof val === 'object') {
+          obj[key] = traverseKeys(p)(f)(val)
+        }
+        if (p(key)) {
+          const {[key]: _, ...rest} = obj
+          obj = {...rest, ...f(key, val)}
+        }
+        return obj
+      },
+      args
+    )
+  }
+
+  const set = (obj, path, val) => {
+    if (path === 'a.b') return {...obj, a: {b: val}}
+    else return obj
+  }
+
+  const hasDots = key => key.indexOf('.') > -1
+
+  const nestValue = (key, val) => {
+    return set({}, key, val)
+  }
+
+  const nestKeys = traverseKeys(hasDots)(nestValue)
+
+  const ab = string('a.b', ['--ab'])
+  const c  = command('c', ['c'], {opts: [ab]})
+
+  const opts = [ab, c]
+
+  const stages = {
+    args: [nestKeys]
+  }
+
+  const parse = parser(stages)(opts)
+
+  expect(
+    parse(['--ab', 'test', 'c', '--ab', 'test2']).args
+  ).toStrictEqual({
+    _: [],
+    a: {b: 'test'},
+    c: {
+      _: [],
+      a: {b: 'test2'}
+    }
+  })
+})
