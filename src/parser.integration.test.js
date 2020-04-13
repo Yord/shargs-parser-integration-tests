@@ -32,7 +32,7 @@ const {
   verifyValuesArity
 } = require('shargs-parser')
 
-const {array, bool, command, complement, flag, string} = require('shargs-opts')
+const {array, bool, command, complement, flag, number, string} = require('shargs-opts')
 
 const {
   argumentIsNotABool,
@@ -1383,4 +1383,145 @@ test('parser works with complement', () => {
 
   expect(args).toStrictEqual(expArgs)
   expect(errs).toStrictEqual(expErrs)
+})
+
+test('FAQ 0..1 example works', () => {
+  const fun = command('fun', ['--fun'], {threeValued: true})
+  const answer = number('answer', ['-a'])
+
+  const isThreeValued = ({threeValued}) => threeValued === true
+
+  const toThreeValued = opt => {
+    const types = ['threeValued']
+
+    const interpretValues = values => (
+      values.length === 0         ? [['true'], []]  :
+      values[0]     === 'true'    ? [['true'], values.slice(1)]  :
+      values[0]     === 'false'   ? [['false'], values.slice(1)] :
+      values[0]     === 'unknown' ? [['unknown'], values.slice(1)]
+                                  : [['true'], values]
+    )
+
+    const valuesAndRest = (
+      !Array.isArray(opt.values)
+        ? [['unknown'], []]
+        : interpretValues(opt.values)
+    )
+
+    const [values, rest] = valuesAndRest
+
+    return {
+      opts: [
+        {...opt, types, values},
+        {...opt, values: rest}
+      ]
+    }
+  }
+
+  const commandsToThreeValued = traverseOpts(isThreeValued)(toThreeValued)
+
+  const opts = [answer, fun]
+
+  const stages = {
+    opts: [commandsToThreeValued]
+  }
+
+  const parse = parser(stages)(opts)
+
+  expect(
+    parse(['--fun']).args
+  ).toStrictEqual({
+    _: [],
+    fun: 'true'
+  })
+
+  expect(
+    parse(['--fun', '-a', '42']).args
+  ).toStrictEqual({
+    _: [],
+    fun: 'true',
+    answer: '42'
+  })
+
+  expect(
+    parse(['--fun', 'true']).args
+  ).toStrictEqual({
+    _: [],
+    fun: 'true'
+  })
+
+  expect(
+    parse(['--fun', 'false']).args
+  ).toStrictEqual({
+    _: [],
+    fun: 'false'
+  })
+
+  expect(
+    parse(['--fun', 'unknown']).args
+  ).toStrictEqual({
+    _: [],
+    fun: 'unknown'
+  })
+
+  expect(
+    parse([]).args
+  ).toStrictEqual({
+    _: [],
+    fun: 'unknown'
+  })
+})
+
+test('FAQ nest example works', () => {
+  function traverseKeys (p) {
+    return f => args => Object.keys(args).reduce(
+      (obj, key) => {
+        const val = args[key]
+        if (!Array.isArray(val) && typeof val === 'object') {
+          obj[key] = traverseKeys(p)(f)(val)
+        }
+        if (p(key)) {
+          const {[key]: _, ...rest} = obj
+          obj = {...rest, ...f(key, val)}
+        }
+        return obj
+      },
+      args
+    )
+  }
+
+  const set = (obj, path, val) => {
+    if (path === 'a.b') return {...obj, a: {b: val}}
+    else return obj
+  }
+
+  const hasDots = key => key.indexOf('.') > -1
+
+  const nestValue = (key, val) => {
+    return set({}, key, val)
+  }
+
+  const nestKeys = traverseKeys(hasDots)(nestValue)
+
+  const ab = string('a.b', ['--ab'])
+  const c  = command('c', ['c'], {opts: [ab]})
+
+  const opts = [ab, c]
+
+  const stages = {
+    args: [nestKeys]
+  }
+
+  const parse = parser(stages)(opts)
+
+  expect(
+    parse(['--ab', 'test', 'c', '--ab', 'test2']).args
+  ).toStrictEqual({
+    _: [],
+    a: {b: 'test'},
+    c: {
+      _: [],
+      a: {b: 'test2'}
+    }
+  })
 })
