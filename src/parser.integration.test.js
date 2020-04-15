@@ -75,6 +75,7 @@ const opts = [
   string('genre', ['-g', '--genre'], {required: true}),
   bool('smile', ['--smile'], {defaultValues: ['yes']}),
   date('date', ['--date'], {defaultValues: ['1977/05/25']}),
+  number('entries', null),
   command('rate', ['rate'], {
     opts: [
       {key: 'stars', types: ['number'], args: ['-s', '--stars'], only: ['1', '2', '3', '4', '5']}
@@ -90,6 +91,7 @@ const opts = [
 ]
 
 const argv = [
+  '42',
   '--query', 'Supersize Me',
   '--query', 'The Hobbit',
   '--colors',
@@ -112,6 +114,7 @@ test('parser without stages works as expected', () => {
     fantasy: 'true',
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
+    entries: '42',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -141,6 +144,7 @@ test('parser only equalsSignAsSpace works as expected', () => {
     fantasy: 'true',
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
+    entries: '42',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -170,6 +174,7 @@ test('parser with shortOptsNoSpace works as expected', () => {
     fantasy: 'true',
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
+    entries: '42',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -200,6 +205,7 @@ test('parser with only splitShortOptions works as expected', () => {
     fantasy: 'true',
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
+    entries: '42',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -236,6 +242,7 @@ test('parser with only traverseArgv works as expected', () => {
     fantasy: 'true',
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
+    entries: '42',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -270,6 +277,7 @@ test('parser with only verifyArgv works as expected', () => {
     fantasy: 'true',
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
+    entries: '42',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -301,6 +309,7 @@ test('parser with only arrayOnRepeat works as expected', () => {
     fantasy: 'true',
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
+    entries: '42',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -329,6 +338,7 @@ test('parser with only bestGuessOpts works as expected', () => {
     _: ['-vv'],
     fantasy: 'true',
     date: '1977/05/25',
+    entries: '42',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: [],
@@ -361,6 +371,7 @@ test('parser with only broadenBools works as expected', () => {
     fantasy: 'true',
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
+    entries: '42',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -390,6 +401,7 @@ test('parser with only cast works as expected', () => {
     fantasy: true,
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
+    entries: 42,
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -422,6 +434,7 @@ test('parser with only contradictOpts works as expected', () => {
     fantasy: 'true',
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
+    entries: '42',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -455,6 +468,7 @@ test('parser with only demandACommand works as expected if no command is present
     fantasy: 'true',
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
+    entries: '42',
     popcorn: {type: 'flag', count: 1},
     query: 'Supersize Me',
     smile: 'yes'
@@ -484,6 +498,7 @@ test('parser with only demandACommand works as expected if a command is present'
     fantasy: 'true',
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
+    entries: '42',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -514,6 +529,7 @@ test('parser with only commandsAsArrays works as expected', () => {
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'true',
     date: '1977/05/25',
+    entries: '42',
     popcorn: {type: 'flag', count: 1},
     rate: ['--stars', '8', '--help'],
     query: 'Supersize Me',
@@ -542,6 +558,7 @@ test('parser with only implyOpts works as expected', () => {
     fantasy: 'true',
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
+    entries: '42',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -575,6 +592,7 @@ test('parser with only requireOptions works as expected', () => {
     fantasy: 'true',
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
+    entries: '42',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -606,6 +624,7 @@ test('parser with only restrictToOnly works as expected', () => {
     fantasy: 'true',
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
+    entries: '42',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help']
@@ -636,6 +655,7 @@ test('parser with only reverseBools works as expected', () => {
     fantasy: 'false',
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
+    entries: '42',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -665,6 +685,7 @@ test('parser with only reverseFlags works as expected', () => {
     fantasy: 'true',
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
+    entries: '42',
     popcorn: {type: 'flag', count: -1},
     rate: {
       _: ['--help'],
@@ -696,6 +717,7 @@ test('parser with only suggestOptions works as expected', () => {
     fantasy: 'true',
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
+    entries: '42',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -741,6 +763,7 @@ test('parser with only traverseOpts works as expected', () => {
     fantasy: 'true',
     help: {type: 'flag', count: -1},
     date: '1977/05/25',
+    entries: '42',
     popcorn: {type: 'flag', count: -1},
     rate: {
       _: ['--help'],
@@ -777,6 +800,7 @@ test('parser with only verifyOpts works as expected', () => {
     fantasy: 'true',
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
+    entries: '42',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -810,6 +834,7 @@ test('parser with only verifyRules works as expected', () => {
     fantasy: 'true',
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
+    entries: '42',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -843,6 +868,7 @@ test('parser with only verifyValuesArity works as expected', () => {
     fantasy: 'true',
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
+    entries: '42',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -872,6 +898,7 @@ test('parser with only bestGuessArgs works as expected', () => {
     colors: {type: 'flag', count: 1},
     fantasy: 'true',
     date: '1977/05/25',
+    entries: '42',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: [],
@@ -903,6 +930,7 @@ test('parser with only bestGuessCast works as expected', () => {
     fantasy: true,
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
+    entries: 42,
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -931,6 +959,7 @@ test('parser with only clearRest works as expected', () => {
     _: [],
     fantasy: 'true',
     date: '1977/05/25',
+    entries: '42',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: [],
@@ -962,6 +991,7 @@ test('parser with only failRest works as expected', () => {
     fantasy: 'true',
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
+    entries: '42',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -996,6 +1026,7 @@ test('parser with only flagsAsBools works as expected', () => {
     fantasy: 'true',
     help: true,
     date: '1977/05/25',
+    entries: '42',
     popcorn: true,
     rate: {
       _: ['--help'],
@@ -1025,6 +1056,7 @@ test('parser with only flagsAsNumbers works as expected', () => {
     fantasy: 'true',
     help: 1,
     date: '1977/05/25',
+    entries: '42',
     popcorn: 1,
     rate: {
       _: ['--help'],
@@ -1054,6 +1086,7 @@ test('parser with only mergeArgs works as expected', () => {
     fantasy: 'true',
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
+    entries: '42',
     popcorn: {type: 'flag', count: 1},
     stars: '8',
     query: 'Supersize Me',
@@ -1087,6 +1120,7 @@ test('parser with only traverseArgs works as expected', () => {
     fantasy: 'true',
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
+    entries: '42',
     popcorn: true,
     rate: {
       _: ['--help'],
@@ -1120,6 +1154,7 @@ test('parser with only verifyArgs works as expected', () => {
     fantasy: 'true',
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
+    entries: '42',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -1161,6 +1196,7 @@ test('parser with custom parser functions for the rate command works as expected
     fantasy: 'true',
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
+    entries: '42',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -1264,6 +1300,7 @@ test('parser with custom stages works as expected', () => {
     fantasy: 'true',
     help: true,
     date: 1977,
+    entries: '42',
     popcorn: true,
     rate: {
       _: ['--help'],
@@ -1343,6 +1380,7 @@ test('parser works with complex stages setup', () => {
     fantasy: false,
     help: true,
     date: '1977/05/25',
+    entries: 42,
     popcorn: false,
     query: ['Supersize Me', 'The Hobbit'],
     smile: false,
