@@ -33,7 +33,7 @@ const {
   verifyValuesArity
 } = require('shargs-parser')
 
-const {array, bool, command, complement, flag, number, string} = require('shargs-opts')
+const {array, bool, command, complement, flag, number, numberPos, string} = require('shargs-opts')
 
 const {
   argumentIsNotABool,
@@ -75,13 +75,10 @@ const opts = [
   string('genre', ['-g', '--genre'], {required: true}),
   bool('smile', ['--smile'], {defaultValues: ['yes']}),
   date('date', ['--date'], {defaultValues: ['1977/05/25']}),
-  number('entries', null),
-  command('rate', ['rate'], {
-    opts: [
-      {key: 'stars', types: ['number'], args: ['-s', '--stars'], only: ['1', '2', '3', '4', '5']}
-    ],
-    array: true
-  }),
+  numberPos('entries'),
+  command([
+    {key: 'stars', types: ['number'], args: ['-s', '--stars'], only: ['1', '2', '3', '4', '5']}
+  ])('rate', ['rate'], {array: true}),
   string('query', ['-q', '--query'], {
     rules: title => opts => (
       !title.values[0].includes('Supersize Me') ||
@@ -1454,7 +1451,7 @@ test('parser works with complement', () => {
 })
 
 test('FAQ 0..1 example works', () => {
-  const fun = command('fun', ['--fun'], {threeValued: true})
+  const fun = command()('fun', ['--fun'], {threeValued: true})
   const answer = number('answer', ['-a'])
 
   const isThreeValued = ({threeValued}) => threeValued === true
@@ -1572,7 +1569,7 @@ test('FAQ nest example works', () => {
   const nestKeys = traverseKeys(hasDots)(nestValue)
 
   const ab = string('a.b', ['--ab'])
-  const c  = command('c', ['c'], {opts: [ab]})
+  const c  = command([ab])('c', ['c'])
 
   const opts = [ab, c]
 
