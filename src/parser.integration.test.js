@@ -7,7 +7,6 @@ const {
   broadenBools,
   cast,
   clearRest,
-  commandsAsArrays,
   contradictOpts,
   demandACommand,
   equalsSignAsSpace,
@@ -26,6 +25,7 @@ const {
   traverseArgs,
   traverseArgv,
   traverseOpts,
+  validatePosArgs,
   verifyArgs,
   verifyArgv,
   verifyOpts,
@@ -33,7 +33,7 @@ const {
   verifyValuesArity
 } = require('shargs-parser')
 
-const {array, bool, command, complement, flag, number, numberPos, string} = require('shargs-opts')
+const {array, bool, command, complement, flag, number, numberPos, string, stringPos} = require('shargs-opts')
 
 const {
   argumentIsNotABool,
@@ -45,6 +45,7 @@ const {
   falseOptsRules,
   falseRules,
   implicationViolated,
+  invalidRequiredPositionalArgument,
   requiredOptionMissing,
   unexpectedArgument,
   valueRestrictionsViolated
@@ -75,10 +76,11 @@ const opts = [
   string('genre', ['-g', '--genre'], {required: true}),
   bool('smile', ['--smile'], {defaultValues: ['yes']}),
   date('date', ['--date'], {defaultValues: ['1977/05/25']}),
-  numberPos('entries'),
+  stringPos('nums', {required: false}),
+  numberPos('entries', {required: true}),
   command([
     {key: 'stars', types: ['number'], args: ['-s', '--stars'], only: ['1', '2', '3', '4', '5']}
-  ])('rate', ['rate'], {array: true}),
+  ])('rate', ['rate']),
   string('query', ['-q', '--query'], {
     rules: title => opts => (
       !title.values[0].includes('Supersize Me') ||
@@ -88,6 +90,7 @@ const opts = [
 ]
 
 const argv = [
+  '23',
   '42',
   '--query', 'Supersize Me',
   '--query', 'The Hobbit',
@@ -112,6 +115,7 @@ test('parser without stages works as expected', () => {
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
     entries: '42',
+    nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -142,6 +146,7 @@ test('parser only equalsSignAsSpace works as expected', () => {
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
     entries: '42',
+    nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -172,6 +177,7 @@ test('parser with shortOptsNoSpace works as expected', () => {
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
     entries: '42',
+    nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -203,6 +209,7 @@ test('parser with only splitShortOptions works as expected', () => {
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
     entries: '42',
+    nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -240,6 +247,7 @@ test('parser with only traverseArgv works as expected', () => {
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
     entries: '42',
+    nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -275,6 +283,7 @@ test('parser with only verifyArgv works as expected', () => {
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
     entries: '42',
+    nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -307,6 +316,7 @@ test('parser with only arrayOnRepeat works as expected', () => {
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
     entries: '42',
+    nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -336,6 +346,7 @@ test('parser with only bestGuessOpts works as expected', () => {
     fantasy: 'true',
     date: '1977/05/25',
     entries: '42',
+    nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: [],
@@ -369,6 +380,7 @@ test('parser with only broadenBools works as expected', () => {
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
     entries: '42',
+    nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -399,6 +411,7 @@ test('parser with only cast works as expected', () => {
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
     entries: 42,
+    nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -432,6 +445,7 @@ test('parser with only contradictOpts works as expected', () => {
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
     entries: '42',
+    nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -466,6 +480,7 @@ test('parser with only demandACommand works as expected if no command is present
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
     entries: '42',
+    nums: '23',
     popcorn: {type: 'flag', count: 1},
     query: 'Supersize Me',
     smile: 'yes'
@@ -496,39 +511,12 @@ test('parser with only demandACommand works as expected if a command is present'
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
     entries: '42',
+    nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
       stars: '8'
     },
-    query: 'Supersize Me',
-    smile: 'yes'
-  }
-
-  const expErrs = []
-
-  const errs2 = filterErrs([])(errs)
-
-  expect(args).toStrictEqual(expArgs)
-  expect(errs2).toStrictEqual(expErrs)
-})
-
-test('parser with only commandsAsArrays works as expected', () => {
-  const checks = {
-    opts: [commandsAsArrays]
-  }
-
-  const stages = {}
-
-  const {errs, args} = parser(stages, {checks})(opts)(argv)
-
-  const expArgs = {
-    _: ['--colors', '-vv', '--smile=no'],
-    fantasy: 'true',
-    date: '1977/05/25',
-    entries: '42',
-    popcorn: {type: 'flag', count: 1},
-    rate: ['--stars', '8', '--help'],
     query: 'Supersize Me',
     smile: 'yes'
   }
@@ -556,6 +544,7 @@ test('parser with only implyOpts works as expected', () => {
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
     entries: '42',
+    nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -590,6 +579,7 @@ test('parser with only requireOptions works as expected', () => {
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
     entries: '42',
+    nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -600,7 +590,7 @@ test('parser with only requireOptions works as expected', () => {
   }
 
   const expErrs = [
-    requiredOptionMissing({key: 'genre', args: ['-g', '--genre']})
+    requiredOptionMissing({key: 'genre'})
   ]
 
   const errs2 = filterErrs(['option'])(errs)
@@ -622,6 +612,7 @@ test('parser with only restrictToOnly works as expected', () => {
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
     entries: '42',
+    nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help']
@@ -653,6 +644,7 @@ test('parser with only reverseBools works as expected', () => {
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
     entries: '42',
+    nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -683,6 +675,7 @@ test('parser with only reverseFlags works as expected', () => {
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
     entries: '42',
+    nums: '23',
     popcorn: {type: 'flag', count: -1},
     rate: {
       _: ['--help'],
@@ -715,6 +708,7 @@ test('parser with only suggestOptions works as expected', () => {
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
     entries: '42',
+    nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -761,6 +755,7 @@ test('parser with only traverseOpts works as expected', () => {
     help: {type: 'flag', count: -1},
     date: '1977/05/25',
     entries: '42',
+    nums: '23',
     popcorn: {type: 'flag', count: -1},
     rate: {
       _: ['--help'],
@@ -773,6 +768,41 @@ test('parser with only traverseOpts works as expected', () => {
   const expErrs = []
 
   const errs2 = filterErrs([])(errs)
+
+  expect(args).toStrictEqual(expArgs)
+  expect(errs2).toStrictEqual(expErrs)
+})
+
+test('parser with only validatePosArgs works as expected', () => {
+  const checks = {
+    opts: [validatePosArgs]
+  }
+
+  const stages = {}
+
+  const {errs, args} = parser(stages, {checks})(opts)(argv)
+
+  const expArgs = {
+    _: ['--colors', '-vv', '--smile=no'],
+    fantasy: 'true',
+    help: {type: 'flag', count: 1},
+    date: '1977/05/25',
+    entries: '42',
+    nums: '23',
+    popcorn: {type: 'flag', count: 1},
+    rate: {
+      _: ['--help'],
+      stars: '8'
+    },
+    query: 'Supersize Me',
+    smile: 'yes'
+  }
+
+  const expErrs = [
+    invalidRequiredPositionalArgument({})
+  ]
+
+  const errs2 = filterErrs(['positionalArguments'])(errs)
 
   expect(args).toStrictEqual(expArgs)
   expect(errs2).toStrictEqual(expErrs)
@@ -798,6 +828,7 @@ test('parser with only verifyOpts works as expected', () => {
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
     entries: '42',
+    nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -832,6 +863,7 @@ test('parser with only verifyRules works as expected', () => {
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
     entries: '42',
+    nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -866,6 +898,7 @@ test('parser with only verifyValuesArity works as expected', () => {
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
     entries: '42',
+    nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -896,6 +929,7 @@ test('parser with only bestGuessArgs works as expected', () => {
     fantasy: 'true',
     date: '1977/05/25',
     entries: '42',
+    nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: [],
@@ -928,6 +962,7 @@ test('parser with only bestGuessCast works as expected', () => {
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
     entries: 42,
+    nums: 23,
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -957,6 +992,7 @@ test('parser with only clearRest works as expected', () => {
     fantasy: 'true',
     date: '1977/05/25',
     entries: '42',
+    nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: [],
@@ -989,6 +1025,7 @@ test('parser with only failRest works as expected', () => {
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
     entries: '42',
+    nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -1024,6 +1061,7 @@ test('parser with only flagsAsBools works as expected', () => {
     help: true,
     date: '1977/05/25',
     entries: '42',
+    nums: '23',
     popcorn: true,
     rate: {
       _: ['--help'],
@@ -1054,6 +1092,7 @@ test('parser with only flagsAsNumbers works as expected', () => {
     help: 1,
     date: '1977/05/25',
     entries: '42',
+    nums: '23',
     popcorn: 1,
     rate: {
       _: ['--help'],
@@ -1084,6 +1123,7 @@ test('parser with only mergeArgs works as expected', () => {
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
     entries: '42',
+    nums: '23',
     popcorn: {type: 'flag', count: 1},
     stars: '8',
     query: 'Supersize Me',
@@ -1118,6 +1158,7 @@ test('parser with only traverseArgs works as expected', () => {
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
     entries: '42',
+    nums: '23',
     popcorn: true,
     rate: {
       _: ['--help'],
@@ -1152,6 +1193,7 @@ test('parser with only verifyArgs works as expected', () => {
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
     entries: '42',
+    nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -1194,6 +1236,7 @@ test('parser with custom parser functions for the rate command works as expected
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
     entries: '42',
+    nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: ['--help'],
@@ -1298,6 +1341,7 @@ test('parser with custom stages works as expected', () => {
     help: true,
     date: 1977,
     entries: '42',
+    nums: '23',
     popcorn: true,
     rate: {
       _: ['--help'],
@@ -1337,7 +1381,8 @@ test('parser works with complex stages setup', () => {
       verifyRules,
       verifyValuesArity,
       implyOpts,
-      contradictOpts
+      contradictOpts,
+      validatePosArgs
     ],
     args: [
       failRest,
@@ -1378,6 +1423,7 @@ test('parser works with complex stages setup', () => {
     help: true,
     date: '1977/05/25',
     entries: 42,
+    nums: '23',
     popcorn: false,
     query: ['Supersize Me', 'The Hobbit'],
     smile: false,
@@ -1391,6 +1437,7 @@ test('parser works with complex stages setup', () => {
     falseRules({key: 'query'}),
     implicationViolated({key: 'fantasy', implies: ['genre']}),
     contradictionDetected({key: 'fantasy', contradicts: ['popcorn']}),
+    invalidRequiredPositionalArgument({}),
     didYouMean({argv: '--colors'}),
     valueRestrictionsViolated({key: 'stars', values: ['8'], index: 0, only: ['1', '2', '3', '4', '5']}),
     didYouMean({argv: '--help'}),
@@ -1399,7 +1446,7 @@ test('parser works with complex stages setup', () => {
     falseArgsRules({})
   ]
 
-  const errs2 = filterErrs(['args', 'options', 'option', 'rules'])(errs)
+  const errs2 = filterErrs(['args', 'options', 'option', 'positionalArguments', 'rules'])(errs)
 
   expect(args).toStrictEqual(expArgs)
   expect(errs2).toStrictEqual(expErrs)
@@ -1410,7 +1457,6 @@ test('parser works with complex stages setup', () => {
 // bestGuessArgs
 // bestGuessCast
 // clearRest
-// commandsAsArrays
 // flagsAsBools
 // flagsAsNumbers
 

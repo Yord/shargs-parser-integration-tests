@@ -52,10 +52,16 @@ const implicationViolated = ({key, implies, option}) => ({
   info: {key, implies, option}
 })
 
-const requiredOptionMissing = ({key, args, option}) => ({
+const invalidRequiredPositionalArgument = ({positionalArguments}) => ({
+  code: 'Invalid required positional argument',
+  msg:  'If a positional argument is required, all previous positional arguments must be required as well. The required field must either be undefined, true or false.',
+  info: {positionalArguments}
+})
+
+const requiredOptionMissing = ({key, option}) => ({
   code: 'Required option is missing',
   msg:  'An option that is marked as required has not been provided.',
-  info: {key, args, option}
+  info: {key, option}
 })
 
 const unexpectedArgument = ({argument}) => ({
@@ -79,6 +85,7 @@ module.exports = {
   falseArgvRules,
   falseOptsRules,
   falseRules,
+  invalidRequiredPositionalArgument,
   implicationViolated,
   requiredOptionMissing,
   unexpectedArgument,
