@@ -1381,7 +1381,8 @@ test('parser works with complex stages setup', () => {
       verifyRules,
       verifyValuesArity,
       implyOpts,
-      contradictOpts
+      contradictOpts,
+      validatePosArgs
     ],
     args: [
       failRest,
@@ -1436,6 +1437,7 @@ test('parser works with complex stages setup', () => {
     falseRules({key: 'query'}),
     implicationViolated({key: 'fantasy', implies: ['genre']}),
     contradictionDetected({key: 'fantasy', contradicts: ['popcorn']}),
+    invalidRequiredPositionalArgument({}),
     didYouMean({argv: '--colors'}),
     valueRestrictionsViolated({key: 'stars', values: ['8'], index: 0, only: ['1', '2', '3', '4', '5']}),
     didYouMean({argv: '--help'}),
@@ -1444,7 +1446,7 @@ test('parser works with complex stages setup', () => {
     falseArgsRules({})
   ]
 
-  const errs2 = filterErrs(['args', 'options', 'option', 'rules'])(errs)
+  const errs2 = filterErrs(['args', 'options', 'option', 'positionalArguments', 'rules'])(errs)
 
   expect(args).toStrictEqual(expArgs)
   expect(errs2).toStrictEqual(expErrs)
