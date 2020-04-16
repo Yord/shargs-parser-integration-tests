@@ -25,6 +25,7 @@ const {
   traverseArgs,
   traverseArgv,
   traverseOpts,
+  validatePosArgs,
   verifyArgs,
   verifyArgv,
   verifyOpts,
@@ -44,6 +45,7 @@ const {
   falseOptsRules,
   falseRules,
   implicationViolated,
+  invalidRequiredPositionalArgument,
   requiredOptionMissing,
   unexpectedArgument,
   valueRestrictionsViolated
@@ -766,6 +768,41 @@ test('parser with only traverseOpts works as expected', () => {
   const expErrs = []
 
   const errs2 = filterErrs([])(errs)
+
+  expect(args).toStrictEqual(expArgs)
+  expect(errs2).toStrictEqual(expErrs)
+})
+
+test('parser with only validatePosArgs works as expected', () => {
+  const checks = {
+    opts: [validatePosArgs]
+  }
+
+  const stages = {}
+
+  const {errs, args} = parser(stages, {checks})(opts)(argv)
+
+  const expArgs = {
+    _: ['--colors', '-vv', '--smile=no'],
+    fantasy: 'true',
+    help: {type: 'flag', count: 1},
+    date: '1977/05/25',
+    entries: '42',
+    nums: '23',
+    popcorn: {type: 'flag', count: 1},
+    rate: {
+      _: ['--help'],
+      stars: '8'
+    },
+    query: 'Supersize Me',
+    smile: 'yes'
+  }
+
+  const expErrs = [
+    invalidRequiredPositionalArgument({})
+  ]
+
+  const errs2 = filterErrs(['positionalArguments'])(errs)
 
   expect(args).toStrictEqual(expArgs)
   expect(errs2).toStrictEqual(expErrs)
