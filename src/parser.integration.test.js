@@ -7,7 +7,6 @@ const {
   broadenBools,
   cast,
   clearRest,
-  commandsAsArrays,
   contradictOpts,
   demandACommand,
   equalsSignAsSpace,
@@ -78,7 +77,7 @@ const opts = [
   numberPos('entries'),
   command([
     {key: 'stars', types: ['number'], args: ['-s', '--stars'], only: ['1', '2', '3', '4', '5']}
-  ])('rate', ['rate'], {array: true}),
+  ])('rate', ['rate']),
   string('query', ['-q', '--query'], {
     rules: title => opts => (
       !title.values[0].includes('Supersize Me') ||
@@ -501,34 +500,6 @@ test('parser with only demandACommand works as expected if a command is present'
       _: ['--help'],
       stars: '8'
     },
-    query: 'Supersize Me',
-    smile: 'yes'
-  }
-
-  const expErrs = []
-
-  const errs2 = filterErrs([])(errs)
-
-  expect(args).toStrictEqual(expArgs)
-  expect(errs2).toStrictEqual(expErrs)
-})
-
-test('parser with only commandsAsArrays works as expected', () => {
-  const checks = {
-    opts: [commandsAsArrays]
-  }
-
-  const stages = {}
-
-  const {errs, args} = parser(stages, {checks})(opts)(argv)
-
-  const expArgs = {
-    _: ['--colors', '-vv', '--smile=no'],
-    fantasy: 'true',
-    date: '1977/05/25',
-    entries: '42',
-    popcorn: {type: 'flag', count: 1},
-    rate: ['--stars', '8', '--help'],
     query: 'Supersize Me',
     smile: 'yes'
   }
@@ -1410,7 +1381,6 @@ test('parser works with complex stages setup', () => {
 // bestGuessArgs
 // bestGuessCast
 // clearRest
-// commandsAsArrays
 // flagsAsBools
 // flagsAsNumbers
 
