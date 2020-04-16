@@ -571,7 +571,7 @@ test('parser with only requireOptions works as expected', () => {
   }
 
   const expErrs = [
-    requiredOptionMissing({key: 'genre', args: ['-g', '--genre']})
+    requiredOptionMissing({key: 'genre'})
   ]
 
   const errs2 = filterErrs(['option'])(errs)
