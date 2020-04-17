@@ -51,7 +51,7 @@ const {
   valueRestrictionsViolated
 } = require('./errors')
 
-const noCommands = opts => opts.filter(({types}) => types !== null)
+const noCommands = opts => opts.filter(({opts}) => !Array.isArray(opts))
 
 const filterErrs = keys => errs => errs.map(
   ({info, ...rest}) => Object.keys(info).reduce(
@@ -1274,7 +1274,7 @@ test('parser with custom stages works as expected', () => {
     const errs2 = []
 
     const aCommand = opts.some(
-      ({types, values}) => types === null && typeof values !== 'undefined'
+      ({opts, values}) => Array.isArray(opts) && typeof values !== 'undefined'
     )
 
     if (!aCommand) {
