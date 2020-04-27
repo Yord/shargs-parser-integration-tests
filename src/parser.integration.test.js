@@ -1496,6 +1496,43 @@ test('parser works with complement', () => {
   expect(errs).toStrictEqual(expErrs)
 })
 
+test('FAQ comma-separated example works', () => {
+  const isCommas = ({key, types, values}) => (
+    typeof key !== 'undefined' &&
+    Array.isArray(types) && types.length === 1 && types[0] === 'commas' &&
+    Array.isArray(values) && values.length === 1
+  )
+
+  const transformCommaArray = opt => {
+    const value = opt.values[0]
+    const values = value.split(',')
+    const types = Array.from({length: values.length}, () => 'string')
+
+    return {opts: [{...opt, types, values}]}
+  }
+
+  const splitCommas = traverseOpts(isCommas)(transformCommaArray)
+
+  const commas = array(['commas'])
+
+  const foo = commas('foo', ['--foo'])
+
+  const opts = [foo]
+
+  const stages = {
+    opts: [splitCommas]
+  }
+
+  const parse = parser(stages)(opts)
+
+  expect(
+    parse(['--foo', '1,2,3,4,5']).args
+  ).toStrictEqual({
+    _: [],
+    foo: ['1', '2', '3', '4', '5']
+  })
+})
+
 test('FAQ 0..1 example works', () => {
   const fun = command()('fun', ['--fun'], {threeValued: true})
   const answer = number('answer', ['-a'])
