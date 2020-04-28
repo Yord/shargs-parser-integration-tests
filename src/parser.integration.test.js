@@ -29,11 +29,10 @@ const {
   verifyArgs,
   verifyArgv,
   verifyOpts,
-  verifyRules,
   verifyValuesArity
 } = require('shargs-parser')
 
-const {array, bool, command, complement, flag, number, numberPos, string, stringPos} = require('shargs-opts')
+const {array, bool, command, complement, flag, number, numberPos, program, string, stringPos} = require('shargs-opts')
 
 const {
   argumentIsNotABool,
@@ -43,7 +42,6 @@ const {
   falseArgsRules,
   falseArgvRules,
   falseOptsRules,
-  falseRules,
   implicationViolated,
   invalidRequiredPositionalArgument,
   requiredOptionMissing,
@@ -51,7 +49,7 @@ const {
   valueRestrictionsViolated
 } = require('./errors')
 
-const noCommands = opts => opts.filter(({opts}) => !Array.isArray(opts))
+const noCommands = opt => ({...opt, opts: opt.opts.filter(({opts}) => !Array.isArray(opts))})
 
 const filterErrs = keys => errs => errs.map(
   ({info, ...rest}) => Object.keys(info).reduce(
@@ -89,6 +87,8 @@ const opts = [
   })
 ]
 
+const script = program('deepThought', opts)
+
 const argv = [
   '23',
   '42',
@@ -107,7 +107,7 @@ const argv = [
 test('parser without stages works as expected', () => {
   const stages = {}
 
-  const {errs, args} = parser(stages)(opts)(argv)
+  const {errs, args} = parser(stages)(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
@@ -138,7 +138,7 @@ test('parser only equalsSignAsSpace works as expected', () => {
     argv: [equalsSignAsSpace]
   }
 
-  const {errs, args} = parser(stages)(opts)(argv)
+  const {errs, args} = parser(stages)(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv'],
@@ -169,7 +169,7 @@ test('parser with shortOptsNoSpace works as expected', () => {
     argv: [shortOptsNoSpace]
   }
 
-  const {errs, args} = parser(stages)(opts)(argv)
+  const {errs, args} = parser(stages)(script)(argv)
 
   const expArgs = {
     _: ['--colors', 'v', '--smile=no'],
@@ -201,7 +201,7 @@ test('parser with only splitShortOptions works as expected', () => {
     argv: [splitShortOptions]
   }
 
-  const {errs, args} = parser(stages)(opts)(argv)
+  const {errs, args} = parser(stages)(script)(argv)
 
   const expArgs = {
     _: ['--colors', '--smile=no'],
@@ -239,7 +239,7 @@ test('parser with only traverseArgv works as expected', () => {
     argv: [traverseArgv(isArgvGroup)(splitArgvGroup)]
   }
 
-  const {errs, args} = parser(stages)(opts)(argv)
+  const {errs, args} = parser(stages)(script)(argv)
 
   const expArgs = {
     _: ['--colors', '--smile=no'],
@@ -275,7 +275,7 @@ test('parser with only verifyArgv works as expected', () => {
 
   const stages = {}
 
-  const {errs, args} = parser(stages, {checks})(opts)(argv)
+  const {errs, args} = parser(stages, {checks})(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
@@ -308,7 +308,7 @@ test('parser with only arrayOnRepeat works as expected', () => {
     opts: [arrayOnRepeat]
   }
 
-  const {errs, args} = parser(stages)(opts)(argv)
+  const {errs, args} = parser(stages)(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
@@ -339,7 +339,7 @@ test('parser with only bestGuessOpts works as expected', () => {
     opts: [bestGuessOpts]
   }
 
-  const {errs, args} = parser(stages)(opts)(argv)
+  const {errs, args} = parser(stages)(script)(argv)
 
   const expArgs = {
     _: ['-vv'],
@@ -372,7 +372,7 @@ test('parser with only broadenBools works as expected', () => {
     opts: [broadenBools({true: ['yes']})]
   }
 
-  const {errs, args} = parser(stages)(opts)(argv)
+  const {errs, args} = parser(stages)(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
@@ -403,7 +403,7 @@ test('parser with only cast works as expected', () => {
     opts: [cast]
   }
 
-  const {errs, args} = parser(stages)(opts)(argv)
+  const {errs, args} = parser(stages)(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
@@ -437,7 +437,7 @@ test('parser with only contradictOpts works as expected', () => {
     opts: [contradictOpts]
   }
 
-  const {errs, args} = parser(stages)(opts)(argv)
+  const {errs, args} = parser(stages)(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
@@ -470,7 +470,7 @@ test('parser with only demandACommand works as expected if no command is present
     opts: [demandACommand]
   }
 
-  const opts2 = noCommands(opts)
+  const opts2 = noCommands(script)
 
   const {errs, args} = parser(stages)(opts2)(argv)
 
@@ -503,7 +503,7 @@ test('parser with only demandACommand works as expected if a command is present'
 
   const stages = {}
 
-  const {errs, args} = parser(stages, {checks})(opts)(argv)
+  const {errs, args} = parser(stages, {checks})(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
@@ -536,7 +536,7 @@ test('parser with only implyOpts works as expected', () => {
 
   const stages = {}
 
-  const {errs, args} = parser(stages, {checks})(opts)(argv)
+  const {errs, args} = parser(stages, {checks})(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
@@ -571,7 +571,7 @@ test('parser with only requireOptions works as expected', () => {
 
   const stages = {}
 
-  const {errs, args} = parser(stages, {checks})(opts)(argv)
+  const {errs, args} = parser(stages, {checks})(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
@@ -604,7 +604,7 @@ test('parser with only restrictToOnly works as expected', () => {
     opts: [restrictToOnly]
   }
 
-  const {errs, args} = parser(stages)(opts)(argv)
+  const {errs, args} = parser(stages)(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
@@ -636,7 +636,7 @@ test('parser with only reverseBools works as expected', () => {
     opts: [reverseBools]
   }
 
-  const {errs, args} = parser(stages)(opts)(argv)
+  const {errs, args} = parser(stages)(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
@@ -667,7 +667,7 @@ test('parser with only reverseFlags works as expected', () => {
     opts: [reverseFlags]
   }
 
-  const {errs, args} = parser(stages)(opts)(argv)
+  const {errs, args} = parser(stages)(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
@@ -700,7 +700,7 @@ test('parser with only suggestOptions works as expected', () => {
 
   const stages = {}
 
-  const {errs, args} = parser(stages, {checks})(opts)(argv)
+  const {errs, args} = parser(stages, {checks})(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
@@ -747,7 +747,7 @@ test('parser with only traverseOpts works as expected', () => {
     ]
   }
 
-  const {errs, args} = parser(stages)(opts)(argv)
+  const {errs, args} = parser(stages)(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
@@ -780,7 +780,7 @@ test('parser with only validatePosArgs works as expected', () => {
 
   const stages = {}
 
-  const {errs, args} = parser(stages, {checks})(opts)(argv)
+  const {errs, args} = parser(stages, {checks})(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
@@ -820,7 +820,7 @@ test('parser with only verifyOpts works as expected', () => {
 
   const stages = {}
 
-  const {errs, args} = parser(stages, {checks})(opts)(argv)
+  const {errs, args} = parser(stages, {checks})(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
@@ -848,41 +848,6 @@ test('parser with only verifyOpts works as expected', () => {
   expect(errs2).toStrictEqual(expErrs)
 })
 
-test('parser with only verifyRules works as expected', () => {
-  const checks = {
-    opts: [verifyRules]
-  }
-
-  const stages = {}
-
-  const {errs, args} = parser(stages, {checks})(opts)(argv)
-
-  const expArgs = {
-    _: ['--colors', '-vv', '--smile=no'],
-    fantasy: 'true',
-    help: {type: 'flag', count: 1},
-    date: '1977/05/25',
-    entries: '42',
-    nums: '23',
-    popcorn: {type: 'flag', count: 1},
-    rate: {
-      _: ['--help'],
-      stars: '8'
-    },
-    query: 'Supersize Me',
-    smile: 'yes'
-  }
-
-  const expErrs = [
-    falseRules({key: 'query'})
-  ]
-
-  const errs2 = filterErrs(['rules', 'option'])(errs)
-
-  expect(args).toStrictEqual(expArgs)
-  expect(errs2).toStrictEqual(expErrs)
-})
-
 test('parser with only verifyValuesArity works as expected', () => {
   const checks = {
     opts: [verifyValuesArity]
@@ -890,7 +855,7 @@ test('parser with only verifyValuesArity works as expected', () => {
 
   const stages = {}
 
-  const {errs, args} = parser(stages, {checks})(opts)(argv)
+  const {errs, args} = parser(stages, {checks})(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
@@ -921,7 +886,7 @@ test('parser with only bestGuessArgs works as expected', () => {
     args: [bestGuessArgs]
   }
 
-  const {errs, args} = parser(stages)(opts)(argv)
+  const {errs, args} = parser(stages)(script)(argv)
 
   const expArgs = {
     _: ['-vv'],
@@ -954,7 +919,7 @@ test('parser with only bestGuessCast works as expected', () => {
     args: [bestGuessCast]
   }
 
-  const {errs, args} = parser(stages)(opts)(argv)
+  const {errs, args} = parser(stages)(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
@@ -985,7 +950,7 @@ test('parser with only clearRest works as expected', () => {
     args: [clearRest]
   }
 
-  const {errs, args} = parser(stages)(opts)(argv)
+  const {errs, args} = parser(stages)(script)(argv)
 
   const expArgs = {
     _: [],
@@ -1017,7 +982,7 @@ test('parser with only failRest works as expected', () => {
 
   const stages = {}
 
-  const {errs, args} = parser(stages, {checks})(opts)(argv)
+  const {errs, args} = parser(stages, {checks})(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
@@ -1053,7 +1018,7 @@ test('parser with only flagsAsBools works as expected', () => {
     args: [flagsAsBools]
   }
 
-  const {errs, args} = parser(stages)(opts)(argv)
+  const {errs, args} = parser(stages)(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
@@ -1084,7 +1049,7 @@ test('parser with only flagsAsNumbers works as expected', () => {
     args: [flagsAsNumbers]
   }
 
-  const {errs, args} = parser(stages)(opts)(argv)
+  const {errs, args} = parser(stages)(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
@@ -1115,7 +1080,7 @@ test('parser with only mergeArgs works as expected', () => {
     args: [mergeArgs()]
   }
 
-  const {errs, args} = parser(stages)(opts)(argv)
+  const {errs, args} = parser(stages)(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no', '--help'],
@@ -1150,7 +1115,7 @@ test('parser with only traverseArgs works as expected', () => {
     ]
   }
 
-  const {errs, args} = parser(stages)(opts)(argv)
+  const {errs, args} = parser(stages)(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
@@ -1185,7 +1150,7 @@ test('parser with only verifyArgs works as expected', () => {
 
   const stages = {}
 
-  const {errs, args} = parser(stages, {checks})(opts)(argv)
+  const {errs, args} = parser(stages, {checks})(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
@@ -1228,7 +1193,7 @@ test('parser with custom parser functions for the rate command works as expected
     })
   }
 
-  const {errs, args} = parser(stages, {checks, parsers})(opts)(argv)
+  const {errs, args} = parser(stages, {checks, parsers})(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
@@ -1333,7 +1298,7 @@ test('parser with custom stages works as expected', () => {
     args: [flagsAsBools]
   }
 
-  const {errs, args} = parser(stages, {checks})(opts)(argv)
+  const {errs, args} = parser(stages, {checks})(script)(argv)
 
   const expArgs = {
     _: ['--colors', '--smile=no'],
@@ -1378,7 +1343,6 @@ test('parser works with complex stages setup', () => {
       demandACommand,
       requireOptions,
       verifyOpts(optsRules),
-      verifyRules,
       verifyValuesArity,
       implyOpts,
       contradictOpts,
@@ -1415,7 +1379,7 @@ test('parser works with complex stages setup', () => {
     ]
   }
 
-  const {errs, args} = parser(stages, {checks})(opts)(argv)
+  const {errs, args} = parser(stages, {checks})(script)(argv)
 
   const expArgs = {
     _: ['--colors', '--help'],
@@ -1434,7 +1398,6 @@ test('parser works with complex stages setup', () => {
     falseArgvRules({argv}),
     requiredOptionMissing({key: 'genre'}),
     falseOptsRules({}),
-    falseRules({key: 'query'}),
     implicationViolated({key: 'fantasy', implies: ['genre']}),
     contradictionDetected({key: 'fantasy', contradicts: ['popcorn']}),
     invalidRequiredPositionalArgument({}),
@@ -1466,19 +1429,19 @@ test('parser works with complement', () => {
   const badLuck   = {key: 'badLuck', types: [], args: ['--luck'], reverse: true}
   const noBadLuck = complement('--no-')(badLuck)
 
-  const opts = [
+  const script = program('complement', [
     tired,
     notTired,
     badLuck,
     noBadLuck
-  ]
+  ])
 
   const stages = {
     opts: [reverseBools, reverseFlags, cast],
     args: [flagsAsBools]
   }
 
-  const parse = parser(stages)(opts)
+  const parse = parser(stages)(script)
 
   const argv = ['--not-tired', 'true', '--no-luck']
 
@@ -1494,6 +1457,43 @@ test('parser works with complement', () => {
 
   expect(args).toStrictEqual(expArgs)
   expect(errs).toStrictEqual(expErrs)
+})
+
+test('FAQ comma-separated example works', () => {
+  const isCommas = ({key, types, values}) => (
+    typeof key !== 'undefined' &&
+    Array.isArray(types) && types.length === 1 && types[0] === 'commas' &&
+    Array.isArray(values) && values.length === 1
+  )
+
+  const transformCommaArray = opt => {
+    const value = opt.values[0]
+    const values = value.split(',')
+    const types = Array.from({length: values.length}, () => 'string')
+
+    return {opts: [{...opt, types, values}]}
+  }
+
+  const splitCommas = traverseOpts(isCommas)(transformCommaArray)
+
+  const commas = array(['commas'])
+
+  const foo = commas('foo', ['--foo'])
+
+  const script = program('foo', [foo])
+
+  const stages = {
+    opts: [splitCommas]
+  }
+
+  const parse = parser(stages)(script)
+
+  expect(
+    parse(['--foo', '1,2,3,4,5']).args
+  ).toStrictEqual({
+    _: [],
+    foo: ['1', '2', '3', '4', '5']
+  })
 })
 
 test('FAQ 0..1 example works', () => {
@@ -1531,13 +1531,13 @@ test('FAQ 0..1 example works', () => {
 
   const commandsToThreeValued = traverseOpts(isThreeValued)(toThreeValued)
 
-  const opts = [answer, fun]
+  const script = program('deepThough', [answer, fun])
 
   const stages = {
     opts: [commandsToThreeValued]
   }
 
-  const parse = parser(stages)(opts)
+  const parse = parser(stages)(script)
 
   expect(
     parse(['--fun']).args
@@ -1617,13 +1617,13 @@ test('FAQ nest example works', () => {
   const ab = string('a.b', ['--ab'])
   const c  = command([ab])('c', ['c'])
 
-  const opts = [ab, c]
+  const script = program('foo', [ab, c])
 
   const stages = {
     args: [nestKeys]
   }
 
-  const parse = parser(stages)(opts)
+  const parse = parser(stages)(script)
 
   expect(
     parse(['--ab', 'test', 'c', '--ab', 'test2']).args
