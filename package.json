@@ -35,6 +35,6 @@
   "dependencies": {
     "shargs": "0.22.4",
     "shargs-opts": "0.4.2",
-    "shargs-parser": "0.5.0"
+    "shargs-parser": "0.5.1"
   }
 }
