@@ -15,7 +15,7 @@ const {
   flagsAsNumbers,
   implyOpts,
   mergeArgs,
-  requireOptions,
+  requireOpts,
   restrictToOnly,
   reverseBools,
   reverseFlags,
@@ -564,9 +564,9 @@ test('parser with only implyOpts works as expected', () => {
   expect(errs2).toStrictEqual(expErrs)
 })
 
-test('parser with only requireOptions works as expected', () => {
+test('parser with only requireOpts works as expected', () => {
   const checks = {
-    opts: [requireOptions]
+    opts: [requireOpts]
   }
 
   const stages = {}
@@ -1341,7 +1341,7 @@ test('parser works with complex stages setup', () => {
     ],
     opts: [
       demandACommand,
-      requireOptions,
+      requireOpts,
       verifyOpts(optsRules),
       verifyValuesArity,
       implyOpts,
