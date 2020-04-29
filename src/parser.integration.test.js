@@ -20,7 +20,7 @@ const {
   reverseBools,
   reverseFlags,
   shortOptsNoSpace,
-  splitShortOptions,
+  splitShortOpts,
   suggestOptions,
   traverseArgs,
   traverseArgv,
@@ -196,9 +196,9 @@ test('parser with shortOptsNoSpace works as expected', () => {
   expect(errs2).toStrictEqual(expErrs)
 })
 
-test('parser with only splitShortOptions works as expected', () => {
+test('parser with only splitShortOpts works as expected', () => {
   const stages = {
-    argv: [splitShortOptions]
+    argv: [splitShortOpts]
   }
 
   const {errs, args} = parser(stages)(script)(argv)
@@ -1224,7 +1224,7 @@ test('parser with custom parser functions for the rate command works as expected
 test('parser with custom stages works as expected', () => {
   const flatMap = (f, arr) => arr.reduce((acc, value) => [...acc, ...f(value)], [])
 
-  function splitShortOptions ({errs = [], argv = []} = {}) {
+  function splitShortOpts ({errs = [], argv = []} = {}) {
     const argv2 = flatMap(
       arg => arg.length > 2 && arg[0] === '-' && arg[1] !== '-'
         ? arg.slice(1).split('').map(c => '-' + c)
@@ -1293,7 +1293,7 @@ test('parser with custom stages works as expected', () => {
   }
 
   const stages = {
-    argv: [splitShortOptions],
+    argv: [splitShortOpts],
     opts: [dateToYear],
     args: [flagsAsBools]
   }
@@ -1357,7 +1357,7 @@ test('parser works with complex stages setup', () => {
   const stages = {
     argv: [
       equalsSignAsSpace,
-      splitShortOptions
+      splitShortOpts
     ],
     opts: [
       restrictToOnly,
