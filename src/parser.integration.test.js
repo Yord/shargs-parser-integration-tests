@@ -21,7 +21,7 @@ const {
   reverseFlags,
   shortOptsNoSpace,
   splitShortOpts,
-  suggestOptions,
+  suggestOpts,
   traverseArgs,
   traverseArgv,
   traverseOpts,
@@ -693,9 +693,9 @@ test('parser with only reverseFlags works as expected', () => {
   expect(errs2).toStrictEqual(expErrs)
 })
 
-test('parser with only suggestOptions works as expected', () => {
+test('parser with only suggestOpts works as expected', () => {
   const checks = {
-    opts: [suggestOptions]
+    opts: [suggestOpts]
   }
 
   const stages = {}
@@ -1364,7 +1364,7 @@ test('parser works with complex stages setup', () => {
       broadenBools({true: ['yes'], false: ['no']}),
       reverseBools,
       reverseFlags,
-      suggestOptions,
+      suggestOpts,
       cast,
       arrayOnRepeat
     ],
