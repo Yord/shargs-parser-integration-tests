@@ -1,4 +1,4 @@
-const {parser} = require('shargs')
+const {parserSync} = require('shargs')
 const {
   arrayOnRepeat,
   bestGuessArgs,
@@ -8,7 +8,7 @@ const {
   cast,
   clearRest,
   contradictOpts,
-  demandACommand,
+  demandASubcommand,
   equalsSignAsSpace,
   failRest,
   flagsAsBools,
@@ -19,6 +19,7 @@ const {
   restrictToOnly,
   reverseBools,
   reverseFlags,
+  setDefaultValues,
   shortOptsNoSpace,
   splitShortOpts,
   suggestOpts,
@@ -32,11 +33,10 @@ const {
   verifyValuesArity
 } = require('shargs-parser')
 
-const {array, bool, command, complement, flag, number, numberPos, program, string, stringPos} = require('shargs-opts')
+const {array, bool, subcommand, complement, flag, number, numberPos, command, string, stringPos} = require('shargs-opts')
 
 const {
   argumentIsNotABool,
-  commandRequired,
   contradictionDetected,
   didYouMean,
   falseArgsRules,
@@ -45,6 +45,7 @@ const {
   implicationViolated,
   invalidRequiredPositionalArgument,
   requiredOptionMissing,
+  subcommandRequired,
   unexpectedArgument,
   valueRestrictionsViolated
 } = require('./errors')
@@ -76,7 +77,7 @@ const opts = [
   date('date', ['--date'], {defaultValues: ['1977/05/25']}),
   stringPos('nums', {required: false}),
   numberPos('entries', {required: true}),
-  command([
+  subcommand([
     {key: 'stars', types: ['number'], args: ['-s', '--stars'], only: ['1', '2', '3', '4', '5']}
   ])('rate', ['rate']),
   string('query', ['-q', '--query'], {
@@ -87,7 +88,7 @@ const opts = [
   })
 ]
 
-const script = program('deepThought', opts)
+const script = command('deepThought', opts)
 
 const argv = [
   '23',
@@ -101,28 +102,26 @@ const argv = [
   '--smile=no',
   'rate',
     '--stars', '8',
-    '--help'
+  '--help'
 ]
 
-test('parser without stages works as expected', () => {
+test('parserSync without stages works as expected', () => {
   const stages = {}
 
-  const {errs, args} = parser(stages)(script)(argv)
+  const {errs, args} = parserSync(stages)(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
-    date: '1977/05/25',
     entries: '42',
     nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
-      _: ['--help'],
+      _: [],
       stars: '8'
     },
-    query: 'Supersize Me',
-    smile: 'yes'
+    query: 'Supersize Me'
   }
 
   const expErrs = []
@@ -133,15 +132,15 @@ test('parser without stages works as expected', () => {
   expect(errs2).toStrictEqual(expErrs)
 })
 
-test('parser only equalsSignAsSpace works as expected', () => {
+test('parserSync with only setDefaultValues works as expected', () => {
   const stages = {
-    argv: [equalsSignAsSpace]
+    opts: [setDefaultValues]
   }
 
-  const {errs, args} = parser(stages)(script)(argv)
+  const {errs, args} = parserSync(stages)(script)(argv)
 
   const expArgs = {
-    _: ['--colors', '-vv'],
+    _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
     date: '1977/05/25',
@@ -149,7 +148,37 @@ test('parser only equalsSignAsSpace works as expected', () => {
     nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
-      _: ['--help'],
+      _: [],
+      stars: '8'
+    },
+    query: 'Supersize Me',
+    smile: 'yes'
+  }
+
+  const expErrs = []
+
+  const errs2 = filterErrs([])(errs)
+
+  expect(errs2).toStrictEqual(expErrs)
+  expect(args).toStrictEqual(expArgs)
+})
+
+test('parserSync with only equalsSignAsSpace works as expected', () => {
+  const stages = {
+    argv: [equalsSignAsSpace]
+  }
+
+  const {errs, args} = parserSync(stages)(script)(argv)
+
+  const expArgs = {
+    _: ['--colors', '-vv'],
+    fantasy: 'true',
+    help: {type: 'flag', count: 1},
+    entries: '42',
+    nums: '23',
+    popcorn: {type: 'flag', count: 1},
+    rate: {
+      _: [],
       stars: '8'
     },
     query: 'Supersize Me',
@@ -164,27 +193,25 @@ test('parser only equalsSignAsSpace works as expected', () => {
   expect(errs2).toStrictEqual(expErrs)
 })
 
-test('parser with shortOptsNoSpace works as expected', () => {
+test('parserSync with shortOptsNoSpace works as expected', () => {
   const stages = {
     argv: [shortOptsNoSpace]
   }
 
-  const {errs, args} = parser(stages)(script)(argv)
+  const {errs, args} = parserSync(stages)(script)(argv)
 
   const expArgs = {
     _: ['--colors', 'v', '--smile=no'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
-    date: '1977/05/25',
     entries: '42',
     nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
-      _: ['--help'],
+      _: [],
       stars: '8'
     },
     query: 'Supersize Me',
-    smile: 'yes',
     verbose: {type: 'flag', count: 1}
   }
 
@@ -196,27 +223,25 @@ test('parser with shortOptsNoSpace works as expected', () => {
   expect(errs2).toStrictEqual(expErrs)
 })
 
-test('parser with only splitShortOpts works as expected', () => {
+test('parserSync with only splitShortOpts works as expected', () => {
   const stages = {
     argv: [splitShortOpts]
   }
 
-  const {errs, args} = parser(stages)(script)(argv)
+  const {errs, args} = parserSync(stages)(script)(argv)
 
   const expArgs = {
     _: ['--colors', '--smile=no'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
-    date: '1977/05/25',
     entries: '42',
     nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
-      _: ['--help'],
+      _: [],
       stars: '8'
     },
     query: 'Supersize Me',
-    smile: 'yes',
     verbose: {type: 'flag', count: 2}
   }
 
@@ -228,7 +253,7 @@ test('parser with only splitShortOpts works as expected', () => {
   expect(errs2).toStrictEqual(expErrs)
 })
 
-test('parser with only traverseArgv works as expected', () => {
+test('parserSync with only traverseArgv works as expected', () => {
   const isArgvGroup = arg => arg.length > 2 && arg[0] === '-' && arg[1] !== '-'
 
   const splitArgvGroup = arg => ({
@@ -239,22 +264,20 @@ test('parser with only traverseArgv works as expected', () => {
     argv: [traverseArgv(isArgvGroup)(splitArgvGroup)]
   }
 
-  const {errs, args} = parser(stages)(script)(argv)
+  const {errs, args} = parserSync(stages)(script)(argv)
 
   const expArgs = {
     _: ['--colors', '--smile=no'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
-    date: '1977/05/25',
     entries: '42',
     nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
-      _: ['--help'],
+      _: [],
       stars: '8'
     },
     query: 'Supersize Me',
-    smile: 'yes',
     verbose: {type: 'flag', count: 2},
   }
 
@@ -266,31 +289,27 @@ test('parser with only traverseArgv works as expected', () => {
   expect(errs2).toStrictEqual(expErrs)
 })
 
-test('parser with only verifyArgv works as expected', () => {
+test('parserSync with only verifyArgv works as expected', () => {
   const argvRules = argv => argv.some(_ => _ === '--fancy')
 
-  const checks = {
+  const stages = {
     argv: [verifyArgv(argvRules)]
   }
 
-  const stages = {}
-
-  const {errs, args} = parser(stages, {checks})(script)(argv)
+  const {errs, args} = parserSync(stages)(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
-    date: '1977/05/25',
     entries: '42',
     nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
-      _: ['--help'],
+      _: [],
       stars: '8'
     },
-    query: 'Supersize Me',
-    smile: 'yes'
+    query: 'Supersize Me'
   }
 
   const expErrs = [
@@ -303,27 +322,25 @@ test('parser with only verifyArgv works as expected', () => {
   expect(errs2).toStrictEqual(expErrs)
 })
 
-test('parser with only arrayOnRepeat works as expected', () => {
+test('parserSync with only arrayOnRepeat works as expected', () => {
   const stages = {
     opts: [arrayOnRepeat]
   }
 
-  const {errs, args} = parser(stages)(script)(argv)
+  const {errs, args} = parserSync(stages)(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
-    date: '1977/05/25',
     entries: '42',
     nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
-      _: ['--help'],
+      _: [],
       stars: '8'
     },
-    query: ['Supersize Me', 'The Hobbit'],
-    smile: 'yes'
+    query: ['Supersize Me', 'The Hobbit']
   }
 
   const expErrs = []
@@ -334,27 +351,25 @@ test('parser with only arrayOnRepeat works as expected', () => {
   expect(errs2).toStrictEqual(expErrs)
 })
 
-test('parser with only bestGuessOpts works as expected', () => {
+test('parserSync with only bestGuessOpts works as expected', () => {
   const stages = {
     opts: [bestGuessOpts]
   }
 
-  const {errs, args} = parser(stages)(script)(argv)
+  const {errs, args} = parserSync(stages)(script)(argv)
 
   const expArgs = {
     _: ['-vv'],
     fantasy: 'true',
-    date: '1977/05/25',
     entries: '42',
+    help: {type: 'flag', count: 1},
     nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: [],
-      help: {type: 'flag', count: 1},
       stars: '8'
     },
     query: 'Supersize Me',
-    smile: 'yes',
     'smile=no': {type: 'flag', count: 1},
     colors: {type: 'flag', count: 1}
   }
@@ -367,12 +382,12 @@ test('parser with only bestGuessOpts works as expected', () => {
   expect(errs2).toStrictEqual(expErrs)
 })
 
-test('parser with only broadenBools works as expected', () => {
+test('parserSync with only broadenBools works as expected', () => {
   const stages = {
-    opts: [broadenBools({true: ['yes']})]
+    opts: [setDefaultValues, broadenBools({true: ['yes']})]
   }
 
-  const {errs, args} = parser(stages)(script)(argv)
+  const {errs, args} = parserSync(stages)(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
@@ -383,7 +398,7 @@ test('parser with only broadenBools works as expected', () => {
     nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
-      _: ['--help'],
+      _: [],
       stars: '8'
     },
     query: 'Supersize Me',
@@ -398,23 +413,23 @@ test('parser with only broadenBools works as expected', () => {
   expect(errs2).toStrictEqual(expErrs)
 })
 
-test('parser with only cast works as expected', () => {
+test('parserSync with only cast works as expected', () => {
   const stages = {
-    opts: [cast]
+    opts: [setDefaultValues, cast]
   }
 
-  const {errs, args} = parser(stages)(script)(argv)
+  const {errs, args} = parserSync(stages)(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
+    date: "1977/05/25",
     fantasy: true,
     help: {type: 'flag', count: 1},
-    date: '1977/05/25',
     entries: 42,
     nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
-      _: ['--help'],
+      _: [],
       stars: 8
     },
     query: 'Supersize Me',
@@ -422,8 +437,7 @@ test('parser with only cast works as expected', () => {
   }
 
   const expErrs = [
-    argumentIsNotABool({defaultValues: ['yes'], index: 0}),
-    argumentIsNotABool({defaultValues: ['yes'], index: 0})
+    argumentIsNotABool({values: ['yes'], index: 0})
   ]
 
   const errs2 = filterErrs(['option'])(errs)
@@ -432,27 +446,25 @@ test('parser with only cast works as expected', () => {
   expect(errs2).toStrictEqual(expErrs)
 })
 
-test('parser with only contradictOpts works as expected', () => {
+test('parserSync with only contradictOpts works as expected', () => {
   const stages = {
     opts: [contradictOpts]
   }
 
-  const {errs, args} = parser(stages)(script)(argv)
+  const {errs, args} = parserSync(stages)(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
-    date: '1977/05/25',
     entries: '42',
     nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
-      _: ['--help'],
+      _: [],
       stars: '8'
     },
-    query: 'Supersize Me',
-    smile: 'yes'
+    query: 'Supersize Me'
   }
 
   const expErrs = [
@@ -465,29 +477,27 @@ test('parser with only contradictOpts works as expected', () => {
   expect(errs2).toStrictEqual(expErrs)
 })
 
-test('parser with only demandACommand works as expected if no command is present', () => {
+test('parserSync with only demandASubcommand works as expected if no subcommand is present', () => {
   const stages = {
-    opts: [demandACommand]
+    opts: [demandASubcommand]
   }
 
   const opts2 = noCommands(script)
 
-  const {errs, args} = parser(stages)(opts2)(argv)
+  const {errs, args} = parserSync(stages)(opts2)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no', 'rate', '--stars', '8'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
-    date: '1977/05/25',
     entries: '42',
     nums: '23',
     popcorn: {type: 'flag', count: 1},
-    query: 'Supersize Me',
-    smile: 'yes'
+    query: 'Supersize Me'
   }
 
   const expErrs = [
-    commandRequired({})
+    subcommandRequired({})
   ]
 
   const errs2 = filterErrs(['options'])(errs)
@@ -496,29 +506,27 @@ test('parser with only demandACommand works as expected if no command is present
   expect(errs2).toStrictEqual(expErrs)
 })
 
-test('parser with only demandACommand works as expected if a command is present', () => {
+test('parserSync with only demandASubcommand works as expected if a subcommand is present', () => {
   const checks = {
-    opts: [demandACommand]
+    opts: [demandASubcommand]
   }
 
   const stages = {}
 
-  const {errs, args} = parser(stages, {checks})(script)(argv)
+  const {errs, args} = parserSync(stages, {checks})(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
-    date: '1977/05/25',
     entries: '42',
     nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
-      _: ['--help'],
+      _: [],
       stars: '8'
     },
-    query: 'Supersize Me',
-    smile: 'yes'
+    query: 'Supersize Me'
   }
 
   const expErrs = []
@@ -529,29 +537,25 @@ test('parser with only demandACommand works as expected if a command is present'
   expect(errs2).toStrictEqual(expErrs)
 })
 
-test('parser with only implyOpts works as expected', () => {
-  const checks = {
+test('parserSync with only implyOpts works as expected', () => {
+  const stages = {
     opts: [implyOpts]
   }
 
-  const stages = {}
-
-  const {errs, args} = parser(stages, {checks})(script)(argv)
+  const {errs, args} = parserSync(stages)(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
-    date: '1977/05/25',
     entries: '42',
     nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
-      _: ['--help'],
+      _: [],
       stars: '8'
     },
-    query: 'Supersize Me',
-    smile: 'yes'
+    query: 'Supersize Me'
   }
 
   const expErrs = [
@@ -564,29 +568,25 @@ test('parser with only implyOpts works as expected', () => {
   expect(errs2).toStrictEqual(expErrs)
 })
 
-test('parser with only requireOpts works as expected', () => {
-  const checks = {
+test('parserSync with only requireOpts works as expected', () => {
+  const stages = {
     opts: [requireOpts]
   }
 
-  const stages = {}
-
-  const {errs, args} = parser(stages, {checks})(script)(argv)
+  const {errs, args} = parserSync(stages)(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
-    date: '1977/05/25',
     entries: '42',
     nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
-      _: ['--help'],
+      _: [],
       stars: '8'
     },
-    query: 'Supersize Me',
-    smile: 'yes'
+    query: 'Supersize Me'
   }
 
   const expErrs = [
@@ -599,26 +599,24 @@ test('parser with only requireOpts works as expected', () => {
   expect(errs2).toStrictEqual(expErrs)
 })
 
-test('parser with only restrictToOnly works as expected', () => {
+test('parserSync with only restrictToOnly works as expected', () => {
   const stages = {
     opts: [restrictToOnly]
   }
 
-  const {errs, args} = parser(stages)(script)(argv)
+  const {errs, args} = parserSync(stages)(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
-    date: '1977/05/25',
     entries: '42',
     nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
-      _: ['--help']
+      _: []
     },
-    query: 'Supersize Me',
-    smile: 'yes'
+    query: 'Supersize Me'
   }
 
   const expErrs = [
@@ -631,27 +629,25 @@ test('parser with only restrictToOnly works as expected', () => {
   expect(errs2).toStrictEqual(expErrs)
 })
 
-test('parser with only reverseBools works as expected', () => {
+test('parserSync with only reverseBools works as expected', () => {
   const stages = {
     opts: [reverseBools]
   }
 
-  const {errs, args} = parser(stages)(script)(argv)
+  const {errs, args} = parserSync(stages)(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'false',
     help: {type: 'flag', count: 1},
-    date: '1977/05/25',
     entries: '42',
     nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
-      _: ['--help'],
+      _: [],
       stars: '8'
     },
-    query: 'Supersize Me',
-    smile: 'yes'
+    query: 'Supersize Me'
   }
 
   const expErrs = []
@@ -662,27 +658,25 @@ test('parser with only reverseBools works as expected', () => {
   expect(errs2).toStrictEqual(expErrs)
 })
 
-test('parser with only reverseFlags works as expected', () => {
+test('parserSync with only reverseFlags works as expected', () => {
   const stages = {
     opts: [reverseFlags]
   }
 
-  const {errs, args} = parser(stages)(script)(argv)
+  const {errs, args} = parserSync(stages)(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
-    date: '1977/05/25',
     entries: '42',
     nums: '23',
     popcorn: {type: 'flag', count: -1},
     rate: {
-      _: ['--help'],
+      _: [],
       stars: '8'
     },
-    query: 'Supersize Me',
-    smile: 'yes'
+    query: 'Supersize Me'
   }
 
   const expErrs = []
@@ -693,29 +687,25 @@ test('parser with only reverseFlags works as expected', () => {
   expect(errs2).toStrictEqual(expErrs)
 })
 
-test('parser with only suggestOpts works as expected', () => {
-  const checks = {
+test('parserSync with only suggestOpts works as expected', () => {
+  const stages = {
     opts: [suggestOpts]
   }
 
-  const stages = {}
-
-  const {errs, args} = parser(stages, {checks})(script)(argv)
+  const {errs, args} = parserSync(stages)(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
-    date: '1977/05/25',
     entries: '42',
     nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
-      _: ['--help'],
+      _: [],
       stars: '8'
     },
-    query: 'Supersize Me',
-    smile: 'yes'
+    query: 'Supersize Me'
   }
 
   const expErrs = [
@@ -730,7 +720,7 @@ test('parser with only suggestOpts works as expected', () => {
   expect(errs2).toStrictEqual(expErrs)
 })
 
-test('parser with only traverseOpts works as expected', () => {
+test('parserSync with only traverseOpts works as expected', () => {
   const isFlag = ({types}) => Array.isArray(types) && types.length === 0
 
   const hasValidValues = ({values}) => Array.isArray(values) && values.length === 1
@@ -747,22 +737,20 @@ test('parser with only traverseOpts works as expected', () => {
     ]
   }
 
-  const {errs, args} = parser(stages)(script)(argv)
+  const {errs, args} = parserSync(stages)(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'true',
     help: {type: 'flag', count: -1},
-    date: '1977/05/25',
     entries: '42',
     nums: '23',
     popcorn: {type: 'flag', count: -1},
     rate: {
-      _: ['--help'],
+      _: [],
       stars: '8'
     },
-    query: 'Supersize Me',
-    smile: 'yes'
+    query: 'Supersize Me'
   }
 
   const expErrs = []
@@ -773,29 +761,25 @@ test('parser with only traverseOpts works as expected', () => {
   expect(errs2).toStrictEqual(expErrs)
 })
 
-test('parser with only validatePosArgs works as expected', () => {
-  const checks = {
+test('parserSync with only validatePosArgs works as expected', () => {
+  const stages = {
     opts: [validatePosArgs]
   }
 
-  const stages = {}
-
-  const {errs, args} = parser(stages, {checks})(script)(argv)
+  const {errs, args} = parserSync(stages)(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
-    date: '1977/05/25',
     entries: '42',
     nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
-      _: ['--help'],
+      _: [],
       stars: '8'
     },
-    query: 'Supersize Me',
-    smile: 'yes'
+    query: 'Supersize Me'
   }
 
   const expErrs = [
@@ -808,34 +792,30 @@ test('parser with only validatePosArgs works as expected', () => {
   expect(errs2).toStrictEqual(expErrs)
 })
 
-test('parser with only verifyOpts works as expected', () => {
+test('parserSync with only verifyOpts works as expected', () => {
   const optsRules = opts => (
     !opts.some(_ => _.key === 'genre') ||
     opts.every(_ => _.key !== 'genre' || _.values)
   )
 
-  const checks = {
+  const stages = {
     opts: [verifyOpts(optsRules)]
   }
 
-  const stages = {}
-
-  const {errs, args} = parser(stages, {checks})(script)(argv)
+  const {errs, args} = parserSync(stages)(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
-    date: '1977/05/25',
     entries: '42',
     nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
-      _: ['--help'],
+      _: [],
       stars: '8'
     },
-    query: 'Supersize Me',
-    smile: 'yes'
+    query: 'Supersize Me'
   }
 
   const expErrs = [
@@ -848,29 +828,25 @@ test('parser with only verifyOpts works as expected', () => {
   expect(errs2).toStrictEqual(expErrs)
 })
 
-test('parser with only verifyValuesArity works as expected', () => {
-  const checks = {
+test('parserSync with only verifyValuesArity works as expected', () => {
+  const stages = {
     opts: [verifyValuesArity]
   }
 
-  const stages = {}
-
-  const {errs, args} = parser(stages, {checks})(script)(argv)
+  const {errs, args} = parserSync(stages)(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
-    date: '1977/05/25',
     entries: '42',
     nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
-      _: ['--help'],
+      _: [],
       stars: '8'
     },
-    query: 'Supersize Me',
-    smile: 'yes'
+    query: 'Supersize Me'
   }
 
   const expErrs = []
@@ -881,28 +857,26 @@ test('parser with only verifyValuesArity works as expected', () => {
   expect(errs2).toStrictEqual(expErrs)
 })
 
-test('parser with only bestGuessArgs works as expected', () => {
+test('parserSync with only bestGuessArgs works as expected', () => {
   const stages = {
     args: [bestGuessArgs]
   }
 
-  const {errs, args} = parser(stages)(script)(argv)
+  const {errs, args} = parserSync(stages)(script)(argv)
 
   const expArgs = {
     _: ['-vv'],
     colors: {type: 'flag', count: 1},
     fantasy: 'true',
-    date: '1977/05/25',
+    help: {type: 'flag', count: 1},
     entries: '42',
     nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
       _: [],
-      help: {type: 'flag', count: 1},
       stars: '8'
     },
     query: 'Supersize Me',
-    smile: 'yes',
     'smile=no': {type: 'flag', count: 1},
   }
 
@@ -914,27 +888,25 @@ test('parser with only bestGuessArgs works as expected', () => {
   expect(errs2).toStrictEqual(expErrs)
 })
 
-test('parser with only bestGuessCast works as expected', () => {
+test('parserSync with only bestGuessCast works as expected', () => {
   const stages = {
     args: [bestGuessCast]
   }
 
-  const {errs, args} = parser(stages)(script)(argv)
+  const {errs, args} = parserSync(stages)(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: true,
     help: {type: 'flag', count: 1},
-    date: '1977/05/25',
     entries: 42,
     nums: 23,
     popcorn: {type: 'flag', count: 1},
     rate: {
-      _: ['--help'],
+      _: [],
       stars: 8
     },
-    query: 'Supersize Me',
-    smile: 'yes'
+    query: 'Supersize Me'
   }
 
   const expErrs = []
@@ -945,17 +917,17 @@ test('parser with only bestGuessCast works as expected', () => {
   expect(errs2).toStrictEqual(expErrs)
 })
 
-test('parser with only clearRest works as expected', () => {
+test('parserSync with only clearRest works as expected', () => {
   const stages = {
     args: [clearRest]
   }
 
-  const {errs, args} = parser(stages)(script)(argv)
+  const {errs, args} = parserSync(stages)(script)(argv)
 
   const expArgs = {
     _: [],
     fantasy: 'true',
-    date: '1977/05/25',
+    help: {type: 'flag', count: 1},
     entries: '42',
     nums: '23',
     popcorn: {type: 'flag', count: 1},
@@ -963,8 +935,7 @@ test('parser with only clearRest works as expected', () => {
       _: [],
       stars: '8'
     },
-    query: 'Supersize Me',
-    smile: 'yes'
+    query: 'Supersize Me'
   }
 
   const expErrs = []
@@ -975,36 +946,31 @@ test('parser with only clearRest works as expected', () => {
   expect(errs2).toStrictEqual(expErrs)
 })
 
-test('parser with only failRest works as expected', () => {
-  const checks = {
+test('parserSync with only failRest works as expected', () => {
+  const stages = {
     args: [failRest]
   }
 
-  const stages = {}
-
-  const {errs, args} = parser(stages, {checks})(script)(argv)
+  const {errs, args} = parserSync(stages)(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
-    date: '1977/05/25',
     entries: '42',
     nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
-      _: ['--help'],
+      _: [],
       stars: '8'
     },
-    query: 'Supersize Me',
-    smile: 'yes'
+    query: 'Supersize Me'
   }
 
   const expErrs = [
     unexpectedArgument({argument: '--colors'}),
     unexpectedArgument({argument: '-vv'}),
-    unexpectedArgument({argument: '--smile=no'}),
-    unexpectedArgument({argument: '--help'})
+    unexpectedArgument({argument: '--smile=no'})
   ]
 
   const errs2 = filterErrs([])(errs)
@@ -1013,27 +979,25 @@ test('parser with only failRest works as expected', () => {
   expect(errs2).toStrictEqual(expErrs)
 })
 
-test('parser with only flagsAsBools works as expected', () => {
+test('parserSync with only flagsAsBools works as expected', () => {
   const stages = {
     args: [flagsAsBools]
   }
 
-  const {errs, args} = parser(stages)(script)(argv)
+  const {errs, args} = parserSync(stages)(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'true',
     help: true,
-    date: '1977/05/25',
     entries: '42',
     nums: '23',
     popcorn: true,
     rate: {
-      _: ['--help'],
+      _: [],
       stars: '8'
     },
-    query: 'Supersize Me',
-    smile: 'yes'
+    query: 'Supersize Me'
   }
 
   const expErrs = []
@@ -1044,27 +1008,25 @@ test('parser with only flagsAsBools works as expected', () => {
   expect(errs2).toStrictEqual(expErrs)
 })
 
-test('parser with only flagsAsNumbers works as expected', () => {
+test('parserSync with only flagsAsNumbers works as expected', () => {
   const stages = {
     args: [flagsAsNumbers]
   }
 
-  const {errs, args} = parser(stages)(script)(argv)
+  const {errs, args} = parserSync(stages)(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'true',
     help: 1,
-    date: '1977/05/25',
     entries: '42',
     nums: '23',
     popcorn: 1,
     rate: {
-      _: ['--help'],
+      _: [],
       stars: '8'
     },
-    query: 'Supersize Me',
-    smile: 'yes'
+    query: 'Supersize Me'
   }
 
   const expErrs = []
@@ -1075,24 +1037,22 @@ test('parser with only flagsAsNumbers works as expected', () => {
   expect(errs2).toStrictEqual(expErrs)
 })
 
-test('parser with only mergeArgs works as expected', () => {
+test('parserSync with only mergeArgs works as expected', () => {
   const stages = {
     args: [mergeArgs()]
   }
 
-  const {errs, args} = parser(stages)(script)(argv)
+  const {errs, args} = parserSync(stages)(script)(argv)
 
   const expArgs = {
-    _: ['--colors', '-vv', '--smile=no', '--help'],
+    _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
-    date: '1977/05/25',
     entries: '42',
     nums: '23',
     popcorn: {type: 'flag', count: 1},
     stars: '8',
-    query: 'Supersize Me',
-    smile: 'yes'
+    query: 'Supersize Me'
   }
 
   const expErrs = []
@@ -1103,7 +1063,7 @@ test('parser with only mergeArgs works as expected', () => {
   expect(errs2).toStrictEqual(expErrs)
 })
 
-test('parser with only traverseArgs works as expected', () => {
+test('parserSync with only traverseArgs works as expected', () => {
   const stages = {
     args: [
       traverseArgs({
@@ -1115,22 +1075,20 @@ test('parser with only traverseArgs works as expected', () => {
     ]
   }
 
-  const {errs, args} = parser(stages)(script)(argv)
+  const {errs, args} = parserSync(stages)(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
-    date: '1977/05/25',
     entries: '42',
     nums: '23',
     popcorn: true,
     rate: {
-      _: ['--help'],
+      _: [],
       stars: '8'
     },
-    query: 'Supersize Me',
-    smile: 'yes'
+    query: 'Supersize Me'
   }
 
   const expErrs = []
@@ -1141,31 +1099,27 @@ test('parser with only traverseArgs works as expected', () => {
   expect(errs2).toStrictEqual(expErrs)
 })
 
-test('parser with only verifyArgs works as expected', () => {
+test('parserSync with only verifyArgs works as expected', () => {
   const argsRules = args => !args.query || args.query.indexOf('Terminator') > -1
 
-  const checks = {
+  const stages = {
     args: [verifyArgs(argsRules)]
   }
 
-  const stages = {}
-
-  const {errs, args} = parser(stages, {checks})(script)(argv)
+  const {errs, args} = parserSync(stages)(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
-    date: '1977/05/25',
     entries: '42',
     nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
-      _: ['--help'],
+      _: [],
       stars: '8'
     },
-    query: 'Supersize Me',
-    smile: 'yes'
+    query: 'Supersize Me'
   }
 
   const expErrs = [
@@ -1178,37 +1132,31 @@ test('parser with only verifyArgs works as expected', () => {
   expect(errs2).toStrictEqual(expErrs)
 })
 
-test('parser with custom parser functions for the rate command works as expected', () => {
+test('parserSync with substages for the rate subcommand works as expected', () => {
   const rules = args => !args.query || args.query.indexOf('Terminator') > -1
 
-  const checks = {
+  const stages = {
     args: [verifyArgs(rules)]
   }
 
-  const stages = {}
-
-  const parsers = {
-    rate: parser({
-      opts: [cast]
-    })
+  const substages = {
+    rate: [cast]
   }
 
-  const {errs, args} = parser(stages, {checks, parsers})(script)(argv)
+  const {errs, args} = parserSync(stages, substages)(script)(argv)
 
   const expArgs = {
     _: ['--colors', '-vv', '--smile=no'],
     fantasy: 'true',
     help: {type: 'flag', count: 1},
-    date: '1977/05/25',
     entries: '42',
     nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
-      _: ['--help'],
+      _: [],
       stars: 8
     },
-    query: 'Supersize Me',
-    smile: 'yes'
+    query: 'Supersize Me'
   }
 
   const expErrs = [
@@ -1221,7 +1169,7 @@ test('parser with custom parser functions for the rate command works as expected
   expect(errs2).toStrictEqual(expErrs)
 })
 
-test('parser with custom stages works as expected', () => {
+test('parserSync with custom stages works as expected', () => {
   const flatMap = (f, arr) => arr.reduce((acc, value) => [...acc, ...f(value)], [])
 
   function splitShortOpts ({errs = [], argv = []} = {}) {
@@ -1235,18 +1183,20 @@ test('parser with custom stages works as expected', () => {
     return {errs, argv: argv2}
   }
 
-  function demandACommand ({errs = [], opts = []} = {}) {
-    const errs2 = []
-
-    const aCommand = opts.some(
-      ({opts, values}) => Array.isArray(opts) && typeof values !== 'undefined'
+  function setDefaultValues ({errs = [], opts = []} = {}) {
+    const setValues = opt => (
+      typeof opt.key === 'string' &&
+      typeof opt.values === 'undefined' &&
+      Array.isArray(opt.defaultValues)
     )
 
-    if (!aCommand) {
-      errs2.push(commandRequired({options: opts}))
+    return {
+      errs,
+      opts: opts.map(opt => ({
+        ...opt,
+        ...(setValues(opt) ? {values: opt.defaultValues} : {})
+      }))
     }
-
-    return {errs: errs.concat(errs2), opts}
   }
 
   function flagsAsBools ({errs = [], args = {}} = {}) {
@@ -1274,10 +1224,6 @@ test('parser with custom stages works as expected', () => {
     const dateToYear = opt => ({
       opts: [{
         ...opt,
-        ...(Array.isArray(opt.defaultValues)
-            ? {defaultValues: opt.defaultValues.map(toYear)}
-            : {}
-        ),
         ...(Array.isArray(opt.values)
             ? {values: opt.values.map(toYear)}
             : {}
@@ -1288,17 +1234,13 @@ test('parser with custom stages works as expected', () => {
     return traverseOpts(isDate)(dateToYear)({errs, opts})
   }
 
-  const checks = {
-    opts: [demandACommand]
-  }
-
   const stages = {
     argv: [splitShortOpts],
-    opts: [dateToYear],
+    opts: [setDefaultValues, dateToYear],
     args: [flagsAsBools]
   }
 
-  const {errs, args} = parser(stages, {checks})(script)(argv)
+  const {errs, args} = parserSync(stages)(script)(argv)
 
   const expArgs = {
     _: ['--colors', '--smile=no'],
@@ -1309,7 +1251,7 @@ test('parser with custom stages works as expected', () => {
     nums: '23',
     popcorn: true,
     rate: {
-      _: ['--help'],
+      _: [],
       stars: '8'
     },
     query: 'Supersize Me',
@@ -1325,7 +1267,7 @@ test('parser with custom stages works as expected', () => {
   expect(errs2).toStrictEqual(expErrs)
 })
 
-test('parser works with complex stages setup', () => {
+test('parserSync works with complex stages setup', () => {
   const argvRules = argv => argv.some(_ => _ === '--fancy')
 
   const optsRules = opts => (
@@ -1335,31 +1277,20 @@ test('parser works with complex stages setup', () => {
 
   const argsRules = args => !args.query || args.query.indexOf('Terminator') > -1
 
-  const checks = {
+  const stages = {
     argv: [
-      verifyArgv(argvRules)
+      verifyArgv(argvRules),
+      equalsSignAsSpace,
+      splitShortOpts
     ],
     opts: [
-      demandACommand,
+      setDefaultValues,
       requireOpts,
       verifyOpts(optsRules),
       verifyValuesArity,
       implyOpts,
       contradictOpts,
-      validatePosArgs
-    ],
-    args: [
-      failRest,
-      verifyArgs(argsRules)
-    ]
-  }
-
-  const stages = {
-    argv: [
-      equalsSignAsSpace,
-      splitShortOpts
-    ],
-    opts: [
+      validatePosArgs,
       restrictToOnly,
       broadenBools({true: ['yes'], false: ['no']}),
       reverseBools,
@@ -1369,6 +1300,8 @@ test('parser works with complex stages setup', () => {
       arrayOnRepeat
     ],
     args: [
+      failRest,
+      verifyArgs(argsRules),
       mergeArgs(),
       traverseArgs({
         flag: ({key, val: {count}, errs, args}) => ({
@@ -1379,10 +1312,10 @@ test('parser works with complex stages setup', () => {
     ]
   }
 
-  const {errs, args} = parser(stages, {checks})(script)(argv)
+  const {errs, args} = parserSync(stages)(script)(argv)
 
   const expArgs = {
-    _: ['--colors', '--help'],
+    _: ['--colors'],
     fantasy: false,
     help: true,
     date: '1977/05/25',
@@ -1403,9 +1336,7 @@ test('parser works with complex stages setup', () => {
     invalidRequiredPositionalArgument({}),
     didYouMean({argv: '--colors'}),
     valueRestrictionsViolated({key: 'stars', values: ['8'], index: 0, only: ['1', '2', '3', '4', '5']}),
-    didYouMean({argv: '--help'}),
     unexpectedArgument({argument: '--colors'}),
-    unexpectedArgument({argument: '--help'}),
     falseArgsRules({})
   ]
 
@@ -1415,6 +1346,7 @@ test('parser works with complex stages setup', () => {
   expect(errs2).toStrictEqual(expErrs)
 })
 
+// demandASubcommand
 // shortOptsNoSpace
 // bestGuessOpts
 // bestGuessArgs
@@ -1423,13 +1355,13 @@ test('parser works with complex stages setup', () => {
 // flagsAsBools
 // flagsAsNumbers
 
-test('parser works with complement', () => {
+test('parserSync works with complement', () => {
   const tired     = {key: 'tired', types: ['bool'], args: ['-t', '--tired'], defaultValues: ['true']}
   const notTired  = complement('--not-')(tired)
   const badLuck   = {key: 'badLuck', types: [], args: ['--luck'], reverse: true}
   const noBadLuck = complement('--no-')(badLuck)
 
-  const script = program('complement', [
+  const script = command('complement', [
     tired,
     notTired,
     badLuck,
@@ -1441,7 +1373,7 @@ test('parser works with complement', () => {
     args: [flagsAsBools]
   }
 
-  const parse = parser(stages)(script)
+  const parse = parserSync(stages)(script)
 
   const argv = ['--not-tired', 'true', '--no-luck']
 
@@ -1480,13 +1412,13 @@ test('FAQ comma-separated example works', () => {
 
   const foo = commas('foo', ['--foo'])
 
-  const script = program('foo', [foo])
+  const script = command('foo', [foo])
 
   const stages = {
     opts: [splitCommas]
   }
 
-  const parse = parser(stages)(script)
+  const parse = parserSync(stages)(script)
 
   expect(
     parse(['--foo', '1,2,3,4,5']).args
@@ -1497,48 +1429,42 @@ test('FAQ comma-separated example works', () => {
 })
 
 test('FAQ 0..1 example works', () => {
-  const fun = command()('fun', ['--fun'], {threeValued: true})
+  const funOpts = [
+    stringPos('threeValues')
+  ]
+
+  const fun = subcommand(funOpts)('fun', ['--fun'], {threeValued: true})
   const answer = number('answer', ['-a'])
+
+  const cmd = command('cmd', [answer, fun])
 
   const isThreeValued = ({threeValued}) => threeValued === true
 
   const toThreeValued = opt => {
     const types = ['threeValued']
 
-    const interpretValues = values => (
-      values.length === 0         ? [['true'], []]  :
-      values[0]     === 'true'    ? [['true'], values.slice(1)]  :
-      values[0]     === 'false'   ? [['false'], values.slice(1)] :
-      values[0]     === 'unknown' ? [['unknown'], values.slice(1)]
-                                  : [['true'], values]
-    )
+    let values = ['unknown']
 
-    const valuesAndRest = (
-      !Array.isArray(opt.values)
-        ? [['unknown'], []]
-        : interpretValues(opt.values)
-    )
-
-    const [values, rest] = valuesAndRest
+    if (Array.isArray(opt.values)) {
+      const threeValues = opt.values.find(opt => opt.key === 'threeValues')
+      values = threeValues.values || ['true']
+    }
 
     return {
       opts: [
-        {...opt, types, values},
-        {...opt, values: rest}
+        {...opt, types, values: values.slice(0, 1), opts: undefined}
       ]
     }
   }
 
-  const commandsToThreeValued = traverseOpts(isThreeValued)(toThreeValued)
-
-  const script = program('deepThough', [answer, fun])
+  const subcommandsToThreeValued = traverseOpts(isThreeValued)(toThreeValued)
 
   const stages = {
-    opts: [commandsToThreeValued]
+    opts: [subcommandsToThreeValued]
   }
 
-  const parse = parser(stages)(script)
-
+  const parse = parserSync(stages)(cmd)
+  
   expect(
     parse(['--fun']).args
   ).toStrictEqual({
@@ -1615,15 +1541,15 @@ test('FAQ nest example works', () => {
   const nestKeys = traverseKeys(hasDots)(nestValue)
 
   const ab = string('a.b', ['--ab'])
-  const c  = command([ab])('c', ['c'])
+  const c  = subcommand([ab])('c', ['c'])
 
-  const script = program('foo', [ab, c])
+  const script = command('foo', [ab, c])
 
   const stages = {
     args: [nestKeys]
   }
 
-  const parse = parser(stages)(script)
+  const parse = parserSync(stages)(script)
 
   expect(
     parse(['--ab', 'test', 'c', '--ab', 'test2']).args

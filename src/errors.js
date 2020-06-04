@@ -1,13 +1,7 @@
 const argumentIsNotABool = ({values, defaultValues, index, option}) => ({
-  code: 'ArgumentIsNotABoolean',
-  msg:  "The passed command line argument must either be 'true' or 'false'",
+  code: 'ArgumentIsNotABool',
+  msg:  "The passed command line argument must either be 'true' or 'false'.",
   info: {values, defaultValues, index, option}
-})
-
-const commandRequired = ({options}) => ({
-  code: 'CommandRequired',
-  msg:  'No command found. Please use at least one command!',
-  info: {options}
 })
 
 const contradictionDetected = ({key, contradicts, option}) => ({
@@ -59,9 +53,15 @@ const invalidRequiredPositionalArgument = ({positionalArguments}) => ({
 })
 
 const requiredOptionMissing = ({key, option}) => ({
-  code: 'RequiredOptionIsMissing',
+  code: 'RequiredOptionMissing',
   msg:  'An option that is marked as required has not been provided.',
   info: {key, option}
+})
+
+const subcommandRequired = ({options}) => ({
+  code: 'SubcommandRequired',
+  msg:  'No subcommand found. Please use at least one subcommand!',
+  info: {options}
 })
 
 const unexpectedArgument = ({argument}) => ({
@@ -71,14 +71,13 @@ const unexpectedArgument = ({argument}) => ({
 })
 
 const valueRestrictionsViolated = ({key, values, index, only, option}) => ({
-  code: 'ValueRestrictionViolated',
+  code: 'ValueRestrictionsViolated',
   msg:  'A value lies outside the allowed values of an option.',
   info: {key, values, index, only, option}
 })
 
 module.exports = {
   argumentIsNotABool,
-  commandRequired,
   contradictionDetected,
   didYouMean,
   falseArgsRules,
@@ -88,6 +87,7 @@ module.exports = {
   invalidRequiredPositionalArgument,
   implicationViolated,
   requiredOptionMissing,
+  subcommandRequired,
   unexpectedArgument,
   valueRestrictionsViolated
 }
