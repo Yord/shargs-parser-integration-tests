@@ -614,7 +614,8 @@ test('parserSync with only restrictToOnly works as expected', () => {
     nums: '23',
     popcorn: {type: 'flag', count: 1},
     rate: {
-      _: []
+      _: [],
+      stars: '8'
     },
     query: 'Supersize Me'
   }
@@ -1324,6 +1325,7 @@ test('parserSync works with complex stages setup', () => {
     popcorn: false,
     query: ['Supersize Me', 'The Hobbit'],
     smile: false,
+    stars: 8,
     verbose: 2
   }
 
