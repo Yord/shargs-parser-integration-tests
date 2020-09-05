@@ -5,6 +5,7 @@ const {
   bestGuessCast,
   bestGuessOpts,
   boolAsFlag,
+  boolsAsFlags,
   broadenBools,
   cast,
   clearRest,
@@ -925,6 +926,36 @@ test('parserSync with only boolAsFlag works as expected', () => {
   const stages = {
     opts: [cast],
     args: [boolAsFlag('fantasy')]
+  }
+
+  const {errs, args} = parserSync(stages)(script)(argv)
+
+  const expArgs = {
+    _: ['--colors', '-vv', '--smile=no'],
+    fantasy: {type: 'flag', count: 1},
+    help: {type: 'flag', count: 1},
+    entries: 42,
+    nums: '23',
+    popcorn: {type: 'flag', count: 1},
+    rate: {
+      _: [],
+      stars: 8
+    },
+    query: 'Supersize Me'
+  }
+
+  const expErrs = []
+
+  const errs2 = filterErrs([])(errs)
+
+  expect(args).toStrictEqual(expArgs)
+  expect(errs2).toStrictEqual(expErrs)
+})
+
+test('parserSync with only boolsAsFlags works as expected', () => {
+  const stages = {
+    opts: [cast],
+    args: [boolsAsFlags]
   }
 
   const {errs, args} = parserSync(stages)(script)(argv)
