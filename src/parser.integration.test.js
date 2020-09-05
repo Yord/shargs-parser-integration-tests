@@ -15,6 +15,7 @@ const {
   flagsAsNumbers,
   implyOpts,
   mergeArgs,
+  numberAsFlag,
   requireOpts,
   restrictToOnly,
   reverseBools,
@@ -1053,6 +1054,36 @@ test('parserSync with only mergeArgs works as expected', () => {
     nums: '23',
     popcorn: {type: 'flag', count: 1},
     stars: '8',
+    query: 'Supersize Me'
+  }
+
+  const expErrs = []
+
+  const errs2 = filterErrs([])(errs)
+
+  expect(args).toStrictEqual(expArgs)
+  expect(errs2).toStrictEqual(expErrs)
+})
+
+test('parserSync with only numberAsFlag works as expected', () => {
+  const stages = {
+    opts: [cast],
+    args: [numberAsFlag('entries')]
+  }
+
+  const {errs, args} = parserSync(stages)(script)(argv)
+
+  const expArgs = {
+    _: ['--colors', '-vv', '--smile=no'],
+    fantasy: true,
+    help: {type: 'flag', count: 1},
+    entries: {type: 'flag', count: 42},
+    nums: '23',
+    popcorn: {type: 'flag', count: 1},
+    rate: {
+      _: [],
+      stars: 8
+    },
     query: 'Supersize Me'
   }
 
