@@ -14,6 +14,7 @@ See the [`shargs` github repository][shargs] for more details!
 ```bash
 $ git clone https://github.com/Yord/shargs-integration-tests.git
 $ cd shargs-integration-tests
+$ npm install
 $ npm test
 ```
 
