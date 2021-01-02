@@ -35,9 +35,9 @@ const {
   verifyArgv,
   verifyOpts,
   verifyValuesArity
-} = require('shargs-parser')
+} = require('shargs/parser')
 
-const {array, bool, subcommand, complement, flag, number, numberPos, command, string, stringPos} = require('shargs-opts')
+const {array, bool, subcommand, complement, flag, number, numberPos, command, string, stringPos} = require('shargs/opts')
 
 const {
   argumentIsNotABool,
