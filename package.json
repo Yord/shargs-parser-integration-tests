@@ -1,6 +1,6 @@
 {
   "name": "shargs-parser-integration-tests",
-  "version": "0.5.3",
+  "version": "0.6.0",
   "description": "Automatic usage documentation generation for shargs",
   "keywords": [
     "shargs",
